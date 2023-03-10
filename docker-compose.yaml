@@ -1,0 +1,31 @@
+version: '3'
+
+volumes:
+  betterff_db:
+
+
+services:
+  backend:
+    build: backend
+    restart: always
+    environment:
+      - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    ports:
+      - ${PORT}:${PORT}
+    depends_on:
+      - database
+  database:
+    build: db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}:3306
+    volumes:
+      - betterff_db:/var/lib/mysql
