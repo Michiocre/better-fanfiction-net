@@ -1,10 +1,13 @@
-FROM buildkite/puppeteer
+FROM ghcr.io/puppeteer/puppeteer
 
-WORKDIR /app/backend
+USER root
 
 COPY package*.json ./
-RUN npm install
+RUN npm install --production
 
 COPY . .
+
+RUN chown -R pptruser ./logs
+USER pptruser
 
 CMD [ "npm", "start"]

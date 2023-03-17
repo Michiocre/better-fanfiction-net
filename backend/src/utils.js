@@ -1,41 +1,49 @@
 const fs = require('fs');
 const path = require("path");
+let loggingPath = path.join('logs','default.txt');
 
-function initLogging() {
-    let loggingPath = path.join('logs','default.txt');
-    
+function initLogging() {    
     if (!fs.existsSync(loggingPath)) {
         fs.mkdirSync(path.dirname(loggingPath), {recursive: true});
     }
     fs.appendFileSync(loggingPath, '\n')
+}
 
-    console.logCopy = console.log.bind(console);
-    console.infoCopy = console.info.bind(console);
-    console.warnCopy = console.warn.bind(console);
-    console.errorCopy = console.error.bind(console);
+function log(...args) {
+    console.log(...args);
+    write(args);
+}
 
-    console.log = function(...args) {
-        let newData = `[${new Date().toUTCString()}] ${args.join(' ')}`;
-        this.logCopy(newData);
-        fs.appendFileSync(loggingPath, newData + '\n');
-    };
-    console.info = function(...args) {
-        let newData = `[${new Date().toUTCString()}] ${args.join(' ')}`;
-        this.infoCopy(newData);
-        fs.appendFileSync(loggingPath, newData + '\n');
-    };
-    console.warn = function(...args) {
-        let newData = `[${new Date().toUTCString()}] ${args.join(' ')}`;
-        this.warnCopy(newData);
-        fs.appendFileSync(loggingPath, newData + '\n');
-    };
-    // console.error = function(...args) {
-    //     let newData = `[${new Date().toUTCString()}] ${args.join(' ')}`;
-    //     this.errorCopy(newData);
-    //     fs.appendFileSync(loggingPath, newData + '\n');
-    // };
+function info(...args) {
+    console.info(...args);
+    write(args);
+}
+
+function warn(...args) {
+    console.warn(...args);
+    write(args);
+}
+
+function error(...args) {
+    console.error(...args);
+    write(args);
+}
+
+function write(...args) {
+    fs.appendFileSync(loggingPath, `[${new Date().toUTCString()}]`);
+    for (let arg of args) {
+        if (arg.toString() == '[object Object]') {
+            arg = JSON.stringify(arg);
+        }
+        fs.appendFileSync(loggingPath, ' ' + arg);
+    }
+    fs.appendFileSync(loggingPath, '\n');
 }
 
 module.exports = {
-    initLogging 
+    initLogging,
+    log,
+    info,
+    warn,
+    error
 }

@@ -17,6 +17,7 @@ async function main() {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_DATABASE,
     });
+
     await api.init();
 
     let maxConcurrent = 10;
@@ -25,15 +26,25 @@ async function main() {
 
     let savingQueue = [];
 
-    // for (let i = 0; i < 2; i++) {
+    // for (let i = 0; i < 100; i++) {
     //     crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', i]})
     // }
 
-    crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=31697']})
-    crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=31698']})
+    // crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=31697']})
+    // crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=0']})
+    crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', 0]})
+    crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', -1]})
+
+    //utils.log('Loading list of fandoms');
+    //await api.loadFandoms();
 
     app.get('/clearQueue', (req, res) => {
         crawlerQueue = [];
+    });
+
+    app.get('/loadFandoms', (req, res) => {
+        api.loadFandoms();
+        res.send('Started loading fandoms');
     });
  
     app.get('/queue', (req, res) => {
@@ -51,10 +62,16 @@ async function main() {
     });
     
     app.listen(port, () => {
-        console.log(`Startup: Example app listening on port ${port}`);
+        utils.log(`Startup: Example app listening on port ${port}`);
     });
 
     let doneSaving = true;
+
+    let functionMap = {
+        'authorId': api.loadUserPage,
+        'page': api.loadSearchPageNr,
+        'url': api.loadSearchPage
+    }
 
     setInterval(async () => {
         let freeSpots = maxConcurrent - currentUsage;
@@ -62,34 +79,12 @@ async function main() {
         for (let i = 0; i < Math.min(freeSpots, crawlerQueue.length); i++) {
             let request = crawlerQueue.shift();
 
-            if (request.type == 'authorId') {
-                currentUsage++;
-                api.loadUserPage(...request.params).then(async stories => {
-                    for (let story of stories) {
-                        savingQueue.push(story);
-                    }
-                    console.log('Finished authorId request: ', request.params.join(','));
-                    currentUsage--;
-                });
-            } else if (request.type == 'page') {
-                currentUsage++;
-                api.loadSearchPageNr(...request.params).then(async stories => {
-                    for (let story of stories) {
-                        savingQueue.push(story);
-                    }
-                    console.log('Finished page request: ', request.params.join(','));
-                    currentUsage--;
-                });
-            }else if (request.type == 'url') {
-                currentUsage++;
-                api.loadSearchPageUrl(...request.params).then(async stories => {
-                    for (let story of stories) {
-                        savingQueue.push(story);
-                    }
-                    console.log('Finished page request: ', request.params.join(','));
-                    currentUsage--;
-                });
-            }
+            currentUsage++;
+            functionMap[request.type](...request.params).then(async ([url, stories]) => {
+                savingQueue.push(stories);
+                utils.log('Finished request:', ...request.params, url);
+                currentUsage--;
+            });
         }
 
     }, 1000);
@@ -97,8 +92,8 @@ async function main() {
         if (doneSaving) {
             doneSaving = false;
             for (let i = 0; i < savingQueue.length; i++) {
-                let story = savingQueue.shift();
-                await db.saveStory(story);
+                let stories = savingQueue.shift();
+                await db.saveStories(stories);
             }
             doneSaving = true;
         }

@@ -2,14 +2,24 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 const {executablePath} = require('puppeteer');
+
 const Author = require('./author');
+const db = require('./db');
+const utils = require('./utils');
 
 const BASE_URL = 'https://www.fanfiction.net';
-let browser;
-let page;
 
+let browser;
 async function init() {
-    browser = await puppeteer.launch({headless: true, executablePath: executablePath(), args:[]});
+    if (process.env.EXECUTABLE_PATH) {
+        browser = await puppeteer.launch({headless: true, executablePath: process.env.EXECUTABLE_PATH, args:['--no-sandbox']});
+    } else {
+        browser = await puppeteer.launch({headless: true, executablePath: executablePath()});
+    }
+}
+
+async function stop() {
+    await browser.close();
 }
 
 function parseDate(unixTime) {
@@ -52,15 +62,20 @@ function parseChars(content) {
         return [pairings, characters];
         
     } catch (error) {
-        console.error("Error parsing characters: ", content)
+        utils.warn("Error parsing characters: ", content)
         throw error;
     }
 }
 
-function parseSearchDiv(content, fandom) {
+function parseSearchDivData(content) {
     try {
-        let pattern = RegExp(/^(?:([^-\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?(?: - (Complete))?$/);
-        let data = pattern.exec(content);
+        let subLines = content.split('<div')
+        let description = subLines[1].split('>');
+        description.shift();
+        description = description.join('>');
+
+        let pattern = RegExp(/^.*?>(?:([^-\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
+        let data = pattern.exec(subLines[2]);
 
         let completed = false;
         let pairings, characters;
@@ -78,7 +93,8 @@ function parseSearchDiv(content, fandom) {
         }
 
         return {
-            fandom: data[1] || fandom,
+            description,
+            fandom: data[1],
             rated: data[2],
             language: data[3],
             genres: data[4]?.split('/'),
@@ -94,12 +110,91 @@ function parseSearchDiv(content, fandom) {
             completed   
         };
     } catch (error) {
-        console.error("Error parsing characters: ", content, error);
+        utils.warn('Cant parse search div lower data:', content);   
     }
 }
 
-async function loadSearchPageUrl(url) {
-    const page = await browser.newPage();
+function parseSearchDivHeader(content) {
+    try {
+        let pattern = new RegExp(/^<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?.*?href="\/u\/(\d+).*?>(.*?)<\/a>(?:.*?href="\/r.*?)?$/);
+        let data = pattern.exec(content);
+
+        return {
+            id: parseNumber(data[1]),
+            image: data[2],
+            title: data[3],
+            author: {
+                id: parseNumber(data[4]),
+                name: data[5]
+            }
+        }
+    } catch (error) {
+        utils.warn('Cant parse search div header: ', content);
+    }
+}
+
+function parseSearchDiv(content) {
+    let lines = content.split('\n');
+
+    let headerData = parseSearchDivHeader(lines[0]);
+
+    let lowerData = parseSearchDivData(lines[1]);
+    return {...headerData, ...lowerData};
+}
+
+async function loadSearchPage(url, page = null) {
+    if (!page) {
+        page = await browser.newPage();
+    }
+
+    let urlParts = url.split('/');
+
+    await page.goto(url);
+
+    let parts = await page.$$eval('.z-list', parts => {
+        return parts.map(el => el.innerHTML);
+    });
+
+    let stories = [];
+
+    for (let part of parts) {
+        stories.push(parseSearchDiv(part));
+    }
+
+    for (let story of stories) {
+        if (!story.fandom) {
+            story.fandom = urlParts[4];
+        }
+    }
+
+    return [url, stories];
+}
+
+async function loadSearchPageNr(category, fandom, pageNr) {
+    let page = await browser.newPage();
+
+    let lastPage;
+    if (pageNr < 0) {
+        pageNr = -pageNr;
+    } else {
+        await page.goto(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10`);
+        const url = await page.$$eval('center a', links => {
+            let last = links[links.length - 2];
+            return [last.innerHTML, last.getAttribute('href')];
+        });
+
+        lastPage = parseInt(url[1].split('=')[3]);
+        pageNr = lastPage - pageNr;
+    }
+
+    return await loadSearchPage(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${pageNr}`, page);
+}
+
+async function loadUserPage(userId) {
+    if (!page) {
+        page = await browser.newPage();
+    }
+
     await page.goto(url);
     const data = await page.$$('.z-list');
 
@@ -120,7 +215,7 @@ async function loadSearchPageUrl(url) {
         
             let titleValues = await page.evaluate(el => {
                 return {
-                    id: el.getAttribute('href').split('/')[2],
+                    id: parseNumber(el.getAttribute('href').split('/')[2]),
                     title: el.textContent,
                 }
             }, aHandlers[0]);
@@ -131,7 +226,7 @@ async function loadSearchPageUrl(url) {
             for (let a of aHandlers) {
                 tempValues = await page.evaluate(el => {
                     return {
-                        id: el.getAttribute('href'),
+                        id: parseNumber(el.getAttribute('href')),
                         name: el.textContent
                     }
                 }, a);
@@ -152,53 +247,48 @@ async function loadSearchPageUrl(url) {
                 authorValues.name = await page.evaluate(el => el.textContent.trim(), authorSpan);
             }
 
-            let metaValues = parseSearchDiv(metaData, urlParts[4]);
+            let metaValues = parseSearchDivData(metaData, urlParts[4]);
 
             stories.push({...titleValues, author: new Author(authorValues.id, authorValues.name), description, ...metaValues});
         } catch (error) {
-            console.log('Could not load one block on page ' + url + ' here is the block:\n', await page.evaluate(el => el.innerHTML, block), error);
+            utils.warn('Could not load one block on page ' + url + ' here is the block:\n', await page.evaluate(el => el.innerHTML, block), error);
         }
     }
-    
+
+    await page.close();
+    utils.log('Finished request:', url);
     return stories;
 }
 
-async function loadSearchOgPageNr(category, fandom, ogPageNr) {
-    return await loadSearchPageUrl(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${ogPageNr}`);
-}
+async function loadFandoms() {
+    let page = await browser.newPage();
 
-async function loadSearchPageNr(category, fandom, pageNr) {
-    let lastPage;
-    if (pageNr < 1) {
-        pageNr = -pageNr;
-    } else {
-        const page = await browser.newPage();
-        await page.goto(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10`);
-        const center = await page.$('center');
-        const aHandlers = await center.$$('a');
+    await page.goto(BASE_URL);
+    let categories = await page.$$eval('#gui_table2i a', el => el.map(a => a.getAttribute('href').split('/')[2]));
     
-        let url;
-        for (let a of aHandlers) {
-            url = await page.evaluate(el => [el.innerHTML, el.getAttribute('href')], a);
-            if (url[0] == 'Last') {
-                break;
-            }
-        }
-    
-        lastPage = parseInt(url[1].split('=')[3]);
-        pageNr = lastPage - pageNr;
+    for (let category of categories) {
+        await page.goto(BASE_URL + '/crossovers/' + category + '/');
+        let fandoms = await page.$$eval('#list_output a', el => el.map(a => ({
+            name: a.getAttribute('href').split('/')[2],
+            id: parseInt(a.getAttribute('href').split('/')[3]),
+            display: a.textContent
+        })));
+        await db.saveFandoms(category, fandoms);
+        utils.log('Loaded fandom ' + category);
     }
 
-    return await loadSearchPageUrl(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${pageNr}`);
-}
-
-async function loadUserPage(userId) {
-    return await loadSearchPageUrl(`${BASE_URL}/u/${userId}`);
+    await page.close();
 }
 
 module.exports = {
     init,
-    loadSearchPageUrl,
+    stop,
+    parseDate,
+    parseNumber,
+    parseChars,
+    parseSearchDivData,
+    loadSearchPage,
     loadSearchPageNr,
-    loadUserPage
+    loadUserPage,
+    loadFandoms
 }
