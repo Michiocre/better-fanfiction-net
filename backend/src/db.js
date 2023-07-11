@@ -4,17 +4,9 @@ const utils = require('./utils');
 
 let connection;
 
-let ratingMap = {};
-
 async function init(options) {
     try {
-        connection = await mysql.createConnection(options);
-
-        let [rows, fields] = await connection.execute('SELECT * FROM `rating`');
-        for (let row of rows) {
-            ratingMap[row.name] = row.id;
-        }
-        
+        connection = await mysql.createConnection(options);        
     } catch (error) {
         utils.log('Database connection could not be established');
         throw error;
@@ -164,13 +156,13 @@ async function saveStories(stories) {
                 //Insert new story
                 await connection.query(
                     'INSERT INTO `story` VALUES (?)',
-                    [[story.id, story.title, story.author.id, fandom.id, story.description, ratingMap[story.rated], story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed]]
+                    [[story.id, story.title, story.author.id, fandom.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed]]
                 );
             } else {
                 //Update existing story
                 await connection.query(
-                    'UPDATE `story` SET title=?, author_id=?, fandom_id=?, description=?, rating_id=?, chapters=?, words=?, reviews=?, favs=?, follows=?, updated=?, published=?, completed=? WHERE id=?',
-                    [story.title, story.author.id, fandom.id, story.description, ratingMap[story.rated], story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed, story.id]
+                    'UPDATE `story` SET title=?, author_id=?, fandom_id=?, description=?, rating=?, chapters=?, words=?, reviews=?, favs=?, follows=?, updated=?, published=?, completed=? WHERE id=?',
+                    [story.title, story.author.id, fandom.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed, story.id]
                 );
             }
 
@@ -205,8 +197,34 @@ async function saveStories(stories) {
     }
 }
 
+async function getFandoms() {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.execute('SELECT * FROM `fandom`');
+
+    return rows;
+}
+
+async function getStoryById(id) {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.execute('SELECT * FROM `story` WHERE `id` = ?', [id]);
+
+    if (rows.length < 1) {
+        return null;
+    }
+
+    return rows[0];
+}
+
 module.exports = {
     init,
     saveFandoms,
-    saveStories
+    saveStories,
+    getFandoms,
+    getStoryById
 }

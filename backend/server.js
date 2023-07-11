@@ -32,33 +32,56 @@ async function main() {
 
     // crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=31697']})
     // crawlerQueue.push({type:'url', params: ['https://www.fanfiction.net/book/Harry-Potter/?&srt=2&r=10&p=0']})
-    crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', 0]})
-    crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', -1]})
+    //crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', 0]})
+    //crawlerQueue.push({type: 'page', params: ['book', 'Harry-Potter', -1]})
 
     //utils.log('Loading list of fandoms');
     //await api.loadFandoms();
 
-    app.get('/clearQueue', (req, res) => {
+    app.get('/crawler/clearQueue', (req, res) => {
         crawlerQueue = [];
     });
 
-    app.get('/loadFandoms', (req, res) => {
+    app.get('/crawler/loadFandoms', (req, res) => {
         api.loadFandoms();
         res.send('Started loading fandoms');
     });
  
-    app.get('/queue', (req, res) => {
+    app.get('/crawler', (req, res) => {
         res.send(crawlerQueue.map(entry => entry.params.join(',')).join('<br>'));
     });
     
-    app.get('/u/:id', async (req, res) => {
+    app.get('/crawler/u/:id', async (req, res) => {
         crawlerQueue.push({type: 'authorId', params: [req.params.id]});
         res.send('Your request has been added to the <a href="/queue">queue</a>');
     });
+
+    app.get('/crawler/:category/:fandom/', async (req, res) => {
+        let url = 'https://www.fanfiction.net/' + req.params.category + '/' + req.params.fandom + '/?';
+        for (let [key, value] of Object.entries(req.query)) {
+            url += '&' + key + '=' + value;
+        }
+        crawlerQueue.push({type: 'url', params: [url]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
     
-    app.get('/:category/:fandom/:page', async (req, res) => {
+    app.get('/crawler/:category/:fandom/:page', async (req, res) => {
         crawlerQueue.push({type: 'page', params: [req.params.category, req.params.fandom, req.params.page]});
-        res.send('Your request has been added to the <a href="/queue">queue</a>');
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
+
+
+    app.get('/fandoms', async (req, res) => {
+        res.send(await db.getFandoms());
+    });
+
+    app.get('/story/:id/updated', async (req, res) => {
+        let story = await db.getStoryById(req.params.id);
+        if (!story) {
+            return res.send();
+        }
+        res.send(story.updated ?? story.published);
     });
     
     app.listen(port, () => {

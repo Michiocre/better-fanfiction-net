@@ -1,16 +1,16 @@
-CREATE TABLE `betterff`.`author` (
+CREATE TABLE IF NOT EXISTS `betterff`.`author` (
     `id` INT NOT NULL,
     `name` VARCHAR(64) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`genre` (
+CREATE TABLE IF NOT EXISTS `betterff`.`genre` (
     `id` INT NOT NULL,
     `name` VARCHAR(64) NOT NULL,
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`fandom` (
+CREATE TABLE IF NOT EXISTS `betterff`.`fandom` (
     `id` INT NOT NULL,
     `name` VARCHAR(288) NOT NULL,
     `category` VARCHAR(32) NOT NULL,
@@ -18,18 +18,7 @@ CREATE TABLE `betterff`.`fandom` (
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`rating` (
-    `id` INT AUTO_INCREMENT NOT NULL,
-    `name` VARCHAR(2) NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE = InnoDB;
-
-INSERT INTO `betterff`.`rating` (name) VALUES ("K");
-INSERT INTO `betterff`.`rating` (name) VALUES ("K+");
-INSERT INTO `betterff`.`rating` (name) VALUES ("T");
-INSERT INTO `betterff`.`rating` (name) VALUES ("M");
-
-CREATE TABLE `betterff`.`character` (
+CREATE TABLE IF NOT EXISTS `betterff`.`character` (
     `id` INT AUTO_INCREMENT NOT NULL,
     `fandom_id` INT NOT NULL,
     `name` VARCHAR(32) NOT NULL,
@@ -37,13 +26,13 @@ CREATE TABLE `betterff`.`character` (
     FOREIGN KEY (`fandom_id`) REFERENCES `betterff`.`fandom`(`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`story` (
+CREATE TABLE IF NOT EXISTS `betterff`.`story` (
     `id` INT NOT NULL,
     `title` VARCHAR(128) NOT NULL,
     `author_id` INT NOT NULL,
     `fandom_id` INT NOT NULL,
     `description` VARCHAR(2048) NOT NULL,
-    `rating_id` INT NOT NULL,
+    `rating` VARCHAR(2) NOT NULL,
     `chapters` INT NOT NULL,
     `words` INT NOT NULL,
     `reviews` INT DEFAULT NULL,
@@ -54,11 +43,10 @@ CREATE TABLE `betterff`.`story` (
     `completed` BOOLEAN NOT NULL,
     PRIMARY KEY (`id`),
     FOREIGN KEY (`author_id`) REFERENCES `betterff`.`author`(`id`),
-    FOREIGN KEY (`fandom_id`) REFERENCES `betterff`.`fandom`(`id`),
-    FOREIGN KEY (`rating_id`) REFERENCES `betterff`.`rating`(`id`)
+    FOREIGN KEY (`fandom_id`) REFERENCES `betterff`.`fandom`(`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`story_genre` (
+CREATE TABLE IF NOT EXISTS `betterff`.`story_genre` (
     `story_id` INT NOT NULL,
     `genre_id` INT NOT NULL,
     PRIMARY KEY (`story_id`, `genre_id`),
@@ -66,7 +54,7 @@ CREATE TABLE `betterff`.`story_genre` (
     FOREIGN KEY (`genre_id`) REFERENCES `betterff`.`genre`(`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`story_fandom` (
+CREATE TABLE IF NOT EXISTS `betterff`.`story_fandom` (
     `story_id` INT NOT NULL,
     `fandom_id` INT NOT NULL,
     PRIMARY KEY (`story_id`, `fandom_id`),
@@ -74,7 +62,7 @@ CREATE TABLE `betterff`.`story_fandom` (
     FOREIGN KEY (`fandom_id`) REFERENCES `betterff`.`fandom`(`id`)
 ) ENGINE = InnoDB;
 
-CREATE TABLE `betterff`.`story_character` (
+CREATE TABLE IF NOT EXISTS `betterff`.`story_character` (
     `story_id` INT NOT NULL,
     `character_id` INT NOT NULL,
     `pairing` INT DEFAULT NULL,

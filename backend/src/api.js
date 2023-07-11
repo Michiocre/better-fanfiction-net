@@ -175,8 +175,6 @@ async function loadSearchPageNr(category, fandom, pageNr) {
 
     let lastPage;
     if (pageNr < 0) {
-        pageNr = -pageNr;
-    } else {
         await page.goto(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10`);
         const url = await page.$$eval('center a', links => {
             let last = links[links.length - 2];
@@ -184,7 +182,7 @@ async function loadSearchPageNr(category, fandom, pageNr) {
         });
 
         lastPage = parseInt(url[1].split('=')[3]);
-        pageNr = lastPage - pageNr;
+        pageNr = lastPage + pageNr + 1;
     }
 
     return await loadSearchPage(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${pageNr}`, page);
