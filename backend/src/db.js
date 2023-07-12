@@ -18,6 +18,13 @@ async function getFandomByName(name) {
         throw Error('Database connection has not been established')  
     }
 
+    if (!name) {
+        return;
+    }
+
+    name = name.replace('&amp;', '&');
+    name = name.replace(`'`, `\\'`);
+
     let [rows, fields] = await connection.execute('SELECT * FROM `fandom` WHERE `name` = ? OR `display` = ?', [name, name]);
 
     if (rows.length < 1) {
@@ -143,9 +150,26 @@ async function saveStories(stories) {
     let existingIds = rows.map(row => row.id);
 
     for (let story of stories) {
-        let fandom = await getFandomByName(story.fandom);
+        let fandom; 
+        if (typeof story.fandom == 'number') {
+            fandom = {id: story.fandom};
+        } else {
+            fandom = await getFandomByName(story.fandom);
+        }
+
+        let xfandom; 
+        if (typeof story.xfandom == 'number') {
+            xfandom = {id: story.xfandom};
+        } else {
+            xfandom = await getFandomByName(story.xfandom);
+        }
+
         if (!fandom) {
-            console.warn('Could not find fandom, maybe try running getFandoms again');
+            utils.warn('Could not find fandom, maybe try running getFandoms again', story.fandom);
+            continue;
+        }
+        if (story.xfandom && !xfandom) {
+            utils.warn('Could not find fandom, maybe try running getFandoms again', story.xfandom);
             continue;
         }
         await saveCharacters(story.characters, story.pairings, fandom.id);
@@ -156,13 +180,13 @@ async function saveStories(stories) {
                 //Insert new story
                 await connection.query(
                     'INSERT INTO `story` VALUES (?)',
-                    [[story.id, story.title, story.author.id, fandom.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed]]
+                    [[story.id, story.title, story.author.id, fandom.id, xfandom?.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed, story.genreA, story.genreB]]
                 );
             } else {
                 //Update existing story
                 await connection.query(
-                    'UPDATE `story` SET title=?, author_id=?, fandom_id=?, description=?, rating=?, chapters=?, words=?, reviews=?, favs=?, follows=?, updated=?, published=?, completed=? WHERE id=?',
-                    [story.title, story.author.id, fandom.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed, story.id]
+                    'UPDATE `story` SET title=?, author_id=?, fandom_id=?, xfandom_id=?, description=?, rating=?, chapters=?, words=?, reviews=?, favs=?, follows=?, updated=?, published=?, completed=?, genreA=?, genreB=? WHERE id=?',
+                    [story.title, story.author.id, fandom.id, xfandom?.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story.completed, story.genreA, story.genreB, story.id]
                 );
             }
 

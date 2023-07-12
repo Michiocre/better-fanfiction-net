@@ -35,7 +35,7 @@ function write(...args) {
         if (arg.toString() == '[object Object]') {
             arg = JSON.stringify(arg);
         }
-        fs.appendFileSync(loggingPath, ' ' + arg);
+        fs.appendFileSync(loggingPath, `${arg}`);
     }
     fs.appendFileSync(loggingPath, '\n');
 }

@@ -3,7 +3,6 @@ const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 puppeteer.use(StealthPlugin());
 const {executablePath} = require('puppeteer');
 
-const Author = require('./author');
 const db = require('./db');
 const utils = require('./utils');
 
@@ -22,19 +21,19 @@ async function stop() {
     await browser.close();
 }
 
+function parseNumber(content) {
+    if (!content) {
+        return 0;
+    }
+    return parseInt(content.replace(',', ''));
+}
+
 function parseDate(unixTime) {
     if (unixTime == undefined) {
         return undefined;
     } else {
         return new Date(unixTime * 1000)
     }
-}
-
-function parseNumber(content) {
-    if (!content) {
-        return 0;
-    }
-    return parseInt(content.replace(',', ''));
 }
 
 function parseChars(content) {
@@ -74,14 +73,14 @@ function parseSearchDivData(content) {
         description.shift();
         description = description.join('>');
 
-        let pattern = RegExp(/^.*?>(?:([^-\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
+        let pattern = RegExp(/^.*?>(?:(?:Crossover - ([^\n&]+) &amp; ([^\n]+) - )|([^\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
         let data = pattern.exec(subLines[2]);
 
         let completed = false;
         let pairings, characters;
 
-        if (data[12]) {
-            let endingParts = data[12].split(' - ');
+        if (data[14]) {
+            let endingParts = data[14].split(' - ');
             if (endingParts.length > 1) {
                 completed = true;
                 [pairings, characters] = parseChars(endingParts[0]);
@@ -92,31 +91,56 @@ function parseSearchDivData(content) {
             }
         }
 
+        let genres = [null, null];
+
+        if (data[6]) {
+            let parts = data[6].split('/');
+            if (parts.length == 1) {
+                genres[0] = parts[0];
+            } else if (parts.length == 2) {
+                if (parts[0] == 'Hurt') {
+                    genres[0] = parts.join('/');
+                } else {
+                    genres = parts;
+                }
+            } else if (parts.length == 3) {
+                if (parts[0] == 'Hurt') {
+                    genres[0] = parts[0] + '/' + parts[1];
+                    genres[1] = parts[2];
+                } else {
+                    genres[0] = parts[0];
+                    genres[1] = parts[1] + '/' + parts[2];
+                }
+            }
+        }
+
         return {
             description,
-            fandom: data[1],
-            rated: data[2],
-            language: data[3],
-            genres: data[4]?.split('/'),
-            chapters: parseNumber(data[5]),
-            words: parseNumber(data[6]),
-            reviews: parseNumber(data[7]),
-            favs: parseNumber(data[8]),
-            follows: parseNumber(data[9]),
-            updated: parseDate(data[10]),
-            published: parseDate(data[11]),
+            fandom: data[1] || data[3],
+            xfandom: data[2] || null,
+            rated: data[4],
+            language: data[5],
+            genreA: genres[0],
+            genreB: genres[1],
+            chapters: parseNumber(data[7]),
+            words: parseNumber(data[8]),
+            reviews: parseNumber(data[9]),
+            favs: parseNumber(data[10]),
+            follows: parseNumber(data[11]),
+            updated: parseDate(data[12]),
+            published: parseDate(data[13]),
             pairings: pairings || [],
             characters: characters || [],
             completed   
         };
     } catch (error) {
-        utils.warn('Cant parse search div lower data:', content);   
+        utils.warn('Cant parse search div lower data:', content); 
     }
 }
 
 function parseSearchDivHeader(content) {
     try {
-        let pattern = new RegExp(/^<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?.*?href="\/u\/(\d+).*?>(.*?)<\/a>(?:.*?href="\/r.*?)?$/);
+        let pattern = new RegExp(/^\s*<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?.*?href="\/u\/(\d+).*?>(.*?)<\/a>(?:.*?href="\/r.*?)?\s*$/);
         let data = pattern.exec(content);
 
         return {
@@ -129,7 +153,7 @@ function parseSearchDivHeader(content) {
             }
         }
     } catch (error) {
-        utils.warn('Cant parse search div header: ', content);
+        utils.warn('Cant parse search div header: ', content, error);
     }
 }
 
@@ -163,7 +187,12 @@ async function loadSearchPage(url, page = null) {
 
     for (let story of stories) {
         if (!story.fandom) {
-            story.fandom = urlParts[4];
+            if (urlParts[3].endsWith('Crossovers')) {
+                story.fandom = parseNumber(urlParts[4]);
+                story.xfandom = parseNumber(urlParts[5]);
+            } else {
+                story.fandom = urlParts[4];
+            }
         }
     }
 
@@ -188,10 +217,12 @@ async function loadSearchPageNr(category, fandom, pageNr) {
     return await loadSearchPage(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${pageNr}`, page);
 }
 
-async function loadUserPage(userId) {
+async function loadUserPage(userId, page = null) {
     if (!page) {
         page = await browser.newPage();
     }
+
+    let url = `${BASE_URL}/u/${userId}`; 
 
     await page.goto(url);
     const data = await page.$$('.z-list');
@@ -206,17 +237,19 @@ async function loadUserPage(userId) {
             let dataDiv = await block.$('div');
             let dataInnerDiv = await dataDiv.$('.z-padtop2');
         
-            let metaData = await page.evaluate(el => el.innerHTML, dataInnerDiv);
+            let metaData = await page.evaluate(el => el.outerHTML, dataDiv);
             let metaDataText = await page.evaluate(el => el.textContent, dataInnerDiv);
             let description = await page.evaluate(el => el.textContent, dataDiv);
             description = description.slice(0, -metaDataText.length)
         
             let titleValues = await page.evaluate(el => {
                 return {
-                    id: parseNumber(el.getAttribute('href').split('/')[2]),
+                    id: el.getAttribute('href').split('/')[2],
                     title: el.textContent,
                 }
             }, aHandlers[0]);
+
+            titleValues.id = parseNumber(titleValues.id);
 
             aHandlers.shift();
 
@@ -224,38 +257,38 @@ async function loadUserPage(userId) {
             for (let a of aHandlers) {
                 tempValues = await page.evaluate(el => {
                     return {
-                        id: parseNumber(el.getAttribute('href')),
+                        id: el.getAttribute('href'),
                         name: el.textContent
                     }
                 }, a);
 
                 if (tempValues.id.startsWith('/u/')) {
-                    authorValues.id = parseNumber(tempValues.id.split('/')[2]);
+                    authorValues.id = tempValues.id.split('/')[2];
                     authorValues.name = tempValues.name;
                     break;
                 }
             }
 
             if (!authorValues.id) {
-                authorValues.id = parseNumber(urlParts[4]);
+                authorValues.id = urlParts[4];
 
                 let wrapper = await page.$('#content_wrapper_inner');
                 let authorSpan = await wrapper.$('span');
 
                 authorValues.name = await page.evaluate(el => el.textContent.trim(), authorSpan);
             }
+            authorValues.id = parseNumber(authorValues.id);
 
-            let metaValues = parseSearchDivData(metaData, urlParts[4]);
+            let metaValues = parseSearchDivData(metaData);
 
-            stories.push({...titleValues, author: new Author(authorValues.id, authorValues.name), description, ...metaValues});
+            stories.push({...titleValues, author: {id: authorValues.id, name: authorValues.name}, description, ...metaValues});
         } catch (error) {
-            utils.warn('Could not load one block on page ' + url + ' here is the block:\n', await page.evaluate(el => el.innerHTML, block), error);
+            utils.warn(`Could not load one block on page ${url} here is the block:\n`, await page.evaluate(el => el.innerHTML, block), error);
         }
     }
 
     await page.close();
-    utils.log('Finished request:', url);
-    return stories;
+    return [url, stories];
 }
 
 async function loadFandoms() {
@@ -265,14 +298,14 @@ async function loadFandoms() {
     let categories = await page.$$eval('#gui_table2i a', el => el.map(a => a.getAttribute('href').split('/')[2]));
     
     for (let category of categories) {
-        await page.goto(BASE_URL + '/crossovers/' + category + '/');
+        await page.goto(`${BASE_URL}/crossovers/${category}/`);
         let fandoms = await page.$$eval('#list_output a', el => el.map(a => ({
             name: a.getAttribute('href').split('/')[2],
             id: parseInt(a.getAttribute('href').split('/')[3]),
-            display: a.textContent
+            display: a.getAttribute('title')
         })));
         await db.saveFandoms(category, fandoms);
-        utils.log('Loaded fandom ' + category);
+        utils.log(`Loaded fandom ${category}`);
     }
 
     await page.close();

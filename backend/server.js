@@ -1,12 +1,18 @@
 const express = require('express');
-require('dotenv').config({path:__dirname+'/./../.env'});
+require('dotenv').config({path: `${__dirname}/./../.env`});
 const app = express();
+const cors = require('cors');
 const port = process.env.PORT;
 
 const utils = require('./src/utils');
 const api = require('./src/api');
 const db = require('./src/db');
 
+const corsOptions = {
+    origin: 'https://www.fanfiction.net',
+    optionsSuccessStatus: 200
+}
+app.use(cors(corsOptions));
 
 async function main() {
     utils.initLogging();
@@ -51,22 +57,55 @@ async function main() {
         res.send(crawlerQueue.map(entry => entry.params.join(',')).join('<br>'));
     });
     
-    app.get('/crawler/u/:id', async (req, res) => {
+    app.get('/crawler/u/:id/:username?', async (req, res) => {
         crawlerQueue.push({type: 'authorId', params: [req.params.id]});
         res.send('Your request has been added to the <a href="/queue">queue</a>');
     });
 
+    app.get('/crawler/j/', async (req, res) => {
+        let url = `https://www.fanfiction.net/j/`;
+        crawlerQueue.push({type: 'url', params: [url]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
+    app.get('/crawler/j/:t/:c/:l/', async (req, res) => {
+        let url = `https://www.fanfiction.net/j/${req.params.t}/${req.params.c}/${req.params.l}/`;
+        crawlerQueue.push({type: 'url', params: [url]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
+    app.get('/crawler/community/:name/:id/', async (req, res) => {
+        let url = `https://www.fanfiction.net/community/${req.params.name}/${req.params.id}`;
+        crawlerQueue.push({type: 'url', params: [url]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
+    app.get('/crawler/community/:name/:id/:r/:s/:p/:g/:w/:c/:t', async (req, res) => {
+        let url = `https://www.fanfiction.net/community/${req.params.name}/${req.params.id}/${req.params.r}/${req.params.s}/${req.params.p}/${req.params.g}/${req.params.w}/${req.params.c}/${req.params.t}`;
+        crawlerQueue.push({type: 'url', params: [url]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
+    app.get('/crawler/page/:category/:fandom/:page', async (req, res) => {
+        crawlerQueue.push({type: 'page', params: [req.params.category, req.params.fandom, req.params.page]});
+        res.send('Your request has been added to the <a href="/crawler">queue</a>');
+    });
+
     app.get('/crawler/:category/:fandom/', async (req, res) => {
-        let url = 'https://www.fanfiction.net/' + req.params.category + '/' + req.params.fandom + '/?';
+        let url = `https://www.fanfiction.net/${req.params.category}/${req.params.fandom}/?`;
         for (let [key, value] of Object.entries(req.query)) {
-            url += '&' + key + '=' + value;
+            url += `&${key}=${value}`;
         }
         crawlerQueue.push({type: 'url', params: [url]});
         res.send('Your request has been added to the <a href="/crawler">queue</a>');
     });
-    
-    app.get('/crawler/:category/:fandom/:page', async (req, res) => {
-        crawlerQueue.push({type: 'page', params: [req.params.category, req.params.fandom, req.params.page]});
+
+    app.get('/crawler/:crossovername/:fandomId/:xfandomId', async (req, res) => {
+        let url = `https://www.fanfiction.net/${req.params.crossovername}/${req.params.fandomId}/${req.params.xfandomId}/?`;
+        for (let [key, value] of Object.entries(req.query)) {
+            url += `&${key}=${value}`;
+        }
+        crawlerQueue.push({type: 'url', params: [url]});
         res.send('Your request has been added to the <a href="/crawler">queue</a>');
     });
 
@@ -79,9 +118,9 @@ async function main() {
     app.get('/story/:id/updated', async (req, res) => {
         let story = await db.getStoryById(req.params.id);
         if (!story) {
-            return res.send();
+            return res.send({id: null});
         }
-        res.send(story.updated ?? story.published);
+        res.send({id: story.id, time: story.updated ?? story.published});
     });
     
     app.listen(port, () => {
@@ -105,7 +144,7 @@ async function main() {
             currentUsage++;
             functionMap[request.type](...request.params).then(async ([url, stories]) => {
                 savingQueue.push(stories);
-                utils.log('Finished request:', ...request.params, url);
+                utils.log('Finished request:', request.type, ...request.params);
                 currentUsage--;
             });
         }
