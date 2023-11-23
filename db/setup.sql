@@ -60,3 +60,24 @@ CREATE TABLE IF NOT EXISTS `betterff`.`story_character` (
     FOREIGN KEY (`story_id`) REFERENCES `betterff`.`story`(`id`),
     FOREIGN KEY (`character_id`) REFERENCES `betterff`.`character`(`id`)
 ) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `betterff`.`community` (
+    `id` INT NOT NULL,
+    `founder_id` INT NOT NULL,
+    `focus_id` INT NOT NULL,
+    `stories` INT NOT NULL,
+    `followers` INT NOT NULL,
+    `description` VARCHAR(2048) NOT NULL,
+    `start_date` DATETIME NOT NULL,
+    PRIMARY KEY (`id`),
+    FOREIGN KEY (`founder_id`) REFERENCES `betterff`.`author`(`id`),
+    FOREIGN KEY (`focus_id`) REFERENCES `betterff`.`fandom`(`id`),
+) ENGINE = InnoDB;
+
+CREATE TABLE IF NOT EXISTS `betterff`.`story_community` (
+    `story_id` INT NOT NULL,
+    `community_id` INT NOT NULL,
+    PRIMARY KEY (`story_id`, `community_id`),
+    FOREIGN KEY (`story_id`) REFERENCES `betterff`.`story`(`id`),
+    FOREIGN KEY (`community_id`) REFERENCES `betterff`.`community`(`id`)
+) ENGINE = InnoDB;
