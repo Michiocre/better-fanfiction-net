@@ -138,13 +138,78 @@ async function saveCharacters(characters, pairings, fandomId) {
     }    
 };
 
+async function saveCommunity(community) {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.query('SELECT * FROM `community` WHERE id = ?', community.id);
+    let communityExists = rows.length >= 1;
+
+    let fandom; 
+    if (typeof community.fandom == 'number') {
+        fandom = {id: community.fandom};
+    } else {
+        fandom = await getFandomByName(community.fandom);
+    }
+
+    if (!fandom) {
+        utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
+        return;
+    }
+
+    try {
+        await connection.beginTransaction();
+        if (!communityExists) {
+            //Insert new community
+            await connection.query(
+                'INSERT INTO `community` VALUES (?)',
+                [[community.id, community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description]]
+            );
+        } else {
+            //Update existing community
+            await connection.query(
+                'UPDATE `community` SET founder_id=?, focus_id=?, start_date=?, story_count=?, followers=?, description=? WHERE id=?',
+                [community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description, community.id]
+            );
+        }
+
+        let [rows, fields] = await connection.execute('SELECT * FROM `community_author` WHERE community_id = ?', [community.id]);
+        let existingStaffIds = rows.map(row => row.author_id);
+
+        let newStaff = community.staff.filter(staff => !existingStaffIds.includes(staff.id));
+        if (newStaff.length > 0) {
+            await connection.query(
+                'INSERT INTO `community_author` VALUES ?',
+                [newStaff.map(staff => ([community.id, staff.id]))]
+            );
+        }
+
+        await connection.commit()
+    } catch (error) {
+        await connection.rollback()
+        throw error;
+    }
+}
+
 async function saveStories(stories) {
     if (!connection) {
         throw Error('Database connection has not been established')  
     }
 
-    let authors = stories.map(story => story.author);
-    await saveAuthors(authors);
+    let authors = new Set(stories.map(story => story.author));
+
+    let community = stories[0].community;
+    if (community) {
+        authors.add(community.author);
+        for (const staff of community.staff) {
+            authors.add(staff);
+        }
+    }
+
+    await saveAuthors(Array.from(authors));
+
+    await saveCommunity(community);
 
     let [rows, fields] = await connection.execute('SELECT * FROM `story`');
     let existingIds = rows.map(row => row.id);
@@ -190,6 +255,7 @@ async function saveStories(stories) {
                 );
             }
 
+            //Add story_character connection
             let characters = [];
             for (let char of story.characters) {
                 characters.push([(await getCharacterByNameAndFandom(char, fandom.id)).id, null]);
@@ -210,6 +276,17 @@ async function saveStories(stories) {
                 await connection.query(
                     'INSERT INTO `story_character` VALUES ?',
                     [newConnections.map(char => ([story.id, char[0], char[1]]))]
+                );
+            }
+
+            //Add story_community connection
+            [rows, fields] = await connection.execute('SELECT * FROM `story_community` WHERE story_id = ? AND community_id = ?', [story.id, community.id]);
+            let connectionExists = rows.length >= 1;
+
+            if (!connectionExists) {
+                await connection.query(
+                    'INSERT INTO `story_community` VALUES (?)',
+                    [[story.id, community.id]]
                 );
             }
 
@@ -245,10 +322,21 @@ async function getStoryById(id) {
     return rows[0];
 }
 
+async function getCommunitiesByStoryId(storyId) {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.execute('SELECT * FROM betterff.story_community sc INNER JOIN betterff.community c ON sc.community_id = c.id WHERE sc.story_id = ?', [storyId]);
+    
+    return rows;
+}
+
 module.exports = {
     init,
     saveFandoms,
     saveStories,
     getFandoms,
-    getStoryById
+    getStoryById,
+    getCommunitiesByStoryId
 }

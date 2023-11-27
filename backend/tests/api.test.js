@@ -5,6 +5,7 @@ test('api parseNumber', () => {
     expect(api.parseNumber('-10')).toBe(-10);
     expect(api.parseNumber('1,000')).toBe(1000);
     expect(api.parseNumber('10.50')).toBe(10);
+    expect(api.parseNumber(10)).toBe(10);
 });
 
 test('api parseDate', () => {
@@ -156,6 +157,75 @@ test('api parseSearchDivData', () => {
         pairings: [],
         completed: false,
         description: "Rated T for swearing and perverted suggestions. Stocking ran out of sweets, and on her quest to find some, she nearly gets into a car accident thanks to a very special card. As if to guide her onto a particular path, a card shop is near where she parks, and a certain Geek Boy is running the shop..."
+    });
+});
+
+test('api parseCommunityDiv', () => {
+    expect(
+        api.parseCommunityDiv(`
+            <tbody><tr>
+            <td valign="top"><img class="cimage " style="clear:left;float:left;margin-right:3px;padding:2px;border:1px solid #ccc;-moz-border-radius:2px;-webkit-border-radius:2px;" src="/image/5843845/75/" width="75" height="100"> <img src="//ff77.b-cdn.net/static/ficons/transmit_blue.png" width="16" height="16" border="0" align="absmiddle"> <a href="https://www.fanfiction.net/alert/community.php?action=add&amp;c2id=84507">Follow</a> . <a style="border:none;float:right" title="Feed" href="/atom/c2/84507/3/"><img src="//ff77.b-cdn.net/static/forum/feed.png" width="16" height="16" border="0" align="absmiddle"></a>
+            <hr size="1" noshade="">
+            <div>Focus: Books <span class="icon-chevron-right xicon-section-arrow"></span> Harry Potter, Since: 08-14-10</div>
+            <div>Founder: <a href="/u/980211/enembee">enembee</a> - Stories: 186,7 - Followers: 5,735 - id: 84507
+            </div><div id="staff" style="display:none;padding-left:100px;"><ol></ol></div>
+            <div>The best stories from the best fanfiction community. Sic semper tyrannis.</div></td>
+            </tr>
+            </tbody>`
+        )
+    ).toStrictEqual({
+        id: 84507,
+        author: {
+            id: 980211,
+            name: 'enembee'
+        },
+        staff: [],
+        fandom: 'Harry Potter',
+        start_date: new Date('08-14-10'),
+        story_count: 1867,
+        follower: 5735,
+        description: 'The best stories from the best fanfiction community. Sic semper tyrannis.'
+    });
+
+    expect(
+        api.parseCommunityDiv(`
+            <tbody><tr>
+            <td valign="top"><img class="cimage " style="clear:left;float:left;margin-right:3px;padding:2px;border:1px solid #ccc;-moz-border-radius:2px;-webkit-border-radius:2px;" src="/image/1851204/75/" width="75" height="100"> <img src="//ff77.b-cdn.net/static/ficons/transmit_blue.png" width="16" height="16" border="0" align="absmiddle"> <a href="https://www.fanfiction.net/alert/community.php?action=add&amp;c2id=11605">Follow</a> . <a style="border:none;float:right" title="Feed" href="/atom/c2/11605/3/"><img src="//ff77.b-cdn.net/static/forum/feed.png" width="16" height="16" border="0" align="absmiddle"></a>
+            <hr size="1" noshade="">
+            <div>Focus: Books <span class="icon-chevron-right xicon-section-arrow"></span> Harry Potter, Since: 02-14-05</div>
+            <div>Founder: <a href="/u/652101/Megami284">Megami284</a> - Stories: 689 - Followers: 1,943 - Staff: <a href="#" onclick="$('#staff').toggle();">14</a> - id: 11605
+            </div><div id="staff" style="display:none;padding-left:100px;"><ol><li><a href="/u/1301475/Blissfully-Delirious">Blissfully Delirious</a></li><li><a href="/u/985486/Gallicka">Gallicka</a></li><li><a href="/u/191364/Kalariona">Kalariona</a></li><li><a href="/u/625905/Mandara">Mandara</a></li><li><a href="/u/1225954/Nicholas-Knut">Nicholas Knut</a></li><li><a href="/u/979403/OnceUponAWinchester">OnceUponAWinchester</a></li><li><a href="/u/212832/Silverfrost">Silverfrost</a></li><li><a href="/u/1171123/The-Haydster">The Haydster</a></li><li><a href="/u/1037497/The-Wykkyd">The Wykkyd</a></li><li><a href="/u/778160/Zoomi">Zoomi</a></li><li><a href="/u/546724/hypersensitive">hypersensitive</a></li><li><a href="/u/1001782/imsocrazy">imsocrazy</a></li><li><a href="/u/1199038/insaneblondemidget14">insaneblondemidget14</a></li><li><a href="/u/756958/sparkley-tangerine">sparkley-tangerine</a></li></ol></div>
+            <div>Have you ever searched and searched for Harry and Draco slash but you've never found the right one to read that has you feeling like your a part of it. Well look no further than here because if you click this you will get access to the BEST HD SLASH out there. So Click, Subscribe and HAPPY reading. I am NOT accepting anymore staff members. Thanks!</div></td>
+            </tr>
+            </tbody>`
+        )
+    ).toStrictEqual({
+        id: 11605,
+        author: {
+            id: 652101,
+            name: 'Megami284'
+        },
+        staff: [
+            { id: 1301475, name: 'Blissfully Delirious' },
+            { id: 985486, name: 'Gallicka' },
+            { id: 191364, name: 'Kalariona' },
+            { id: 625905, name: 'Mandara' },
+            { id: 1225954, name: 'Nicholas Knut' },
+            { id: 979403, name: 'OnceUponAWinchester' },
+            { id: 212832, name: 'Silverfrost' },
+            { id: 1171123, name: 'The Haydster' },
+            { id: 1037497, name: 'The Wykkyd' },
+            { id: 778160, name: 'Zoomi' },
+            { id: 546724, name: 'hypersensitive' },
+            { id: 1001782, name: 'imsocrazy' },
+            { id: 1199038, name: 'insaneblondemidget14' },
+            { id: 756958, name: 'sparkley-tangerine' }
+          ],
+        fandom: 'Harry Potter',
+        start_date: new Date('02-14-05'),
+        story_count: 689,
+        follower: 1943,
+        description: `Have you ever searched and searched for Harry and Draco slash but you've never found the right one to read that has you feeling like your a part of it. Well look no further than here because if you click this you will get access to the BEST HD SLASH out there. So Click, Subscribe and HAPPY reading. I am NOT accepting anymore staff members. Thanks!`
     });
 });
 

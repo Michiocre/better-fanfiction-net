@@ -47,6 +47,9 @@
         .bff_error {
             background: lightcoral;
         }
+        .adsbygoogle {
+            display: none !important;
+        }
     `);
 
     let storiesEl = document.getElementsByClassName('z-list');
@@ -56,13 +59,14 @@
         adBlock.hidden = true;
     }
 
-    let ads = document.getElementsByClassName('adsbygoogle');
-    for (const ad of ads) {
-        ad.parentElement.hidden = true;
-    }
-
     if (window.location.pathname.startsWith('/communities') || window.location.pathname.startsWith('/forums')) {
         return;
+    }
+
+    let communityId = null;
+
+    if (window.location.pathname.startsWith('/community')) {
+        communityId = parseInt(window.location.pathname.split('/')[3]);
     }
 
     for (let storyEl of storiesEl) {
@@ -88,20 +92,35 @@
 
         fetch(`http://localhost:8888/story/${id}/updated`).then(res => {
             res.json().then(val => {
+                let status = 'not_registered';
                 if (val.id) {
                     if (new Date(val.time).getTime() >= storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime') * 1000) {
+                        status = 'loaded'
+                    } else {
+                        status = 'outdated'
+                    }
+
+                    if (!val.communities.includes(communityId)) {
+                        status = 'outdated';
+                    }
+                }
+
+                switch (status) {
+                    case 'loaded':
                         newEl.classList.remove('bff_loading');
                         newEl.classList.add('bff_success');
                         newEl.innerText = 'up to date';
-                    } else {
+                        break;
+                    case 'outdated':
                         newEl.classList.remove('bff_loading');
                         newEl.classList.add('bff_warning');
                         newEl.innerText = 'outdated';
-                    }
-                } else {
-                    newEl.classList.remove('bff_loading');
-                    newEl.classList.add('bff_error');
-                    newEl.innerText = 'not registered';
+                        break;
+                    case 'not_registered':
+                        newEl.classList.remove('bff_loading');
+                        newEl.classList.add('bff_error');
+                        newEl.innerText = 'not registered';
+                        break;
                 }
             });
         });

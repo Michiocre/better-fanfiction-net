@@ -11,9 +11,9 @@ const BASE_URL = 'https://www.fanfiction.net';
 let browser;
 async function init() {
     if (process.env.EXECUTABLE_PATH) {
-        browser = await puppeteer.launch({headless: true, executablePath: process.env.EXECUTABLE_PATH, args:['--no-sandbox']});
+        browser = await puppeteer.launch({headless: 'new', executablePath: process.env.EXECUTABLE_PATH, args:['--no-sandbox']});
     } else {
-        browser = await puppeteer.launch({headless: true, executablePath: executablePath()});
+        browser = await puppeteer.launch({headless: 'new', executablePath: executablePath()});
     }
 }
 
@@ -24,6 +24,9 @@ async function stop() {
 function parseNumber(content) {
     if (!content) {
         return 0;
+    }
+    if (typeof content == 'number') {
+        return content;
     }
     return parseInt(content.replace(',', ''));
 }
@@ -166,6 +169,41 @@ function parseSearchDiv(content) {
     return {...headerData, ...lowerData};
 }
 
+function parseCommunityDiv(content) {
+    let pattern = new RegExp(/^.*arrow".*?> ([^<>]+), Since: ([\d\-]+).*?Founder: <a href="\/u\/(\d+).*?>(.*?)<.+? Stories: ([\d,]+) - Followers: ([\d,]+).*?id: ([\d,]+).*?<ol>(.*?)<\/ol>.*?<div>(.*?)<\/div>.*?$/gs);
+    let data = pattern.exec(content);
+    
+    let staffStrings = data[8].split('</li>');
+    staffStrings.pop();
+
+    let staffPattern = new RegExp(/u\/(\d+)[^>]*>(.*?)<\/a>/);
+    let staff = [];
+    if (staffStrings) {
+        staff = staffStrings.map(el => {
+            let x = staffPattern.exec(el);
+    
+            return {
+                id: parseNumber(x[1]),
+                name: x[2]
+            };
+        });
+    }
+    
+    return {
+        id: parseNumber(data[7]),
+        author: {
+            id: parseNumber(data[3]),
+            name: data[4]
+        },
+        staff: staff,
+        fandom: data[1],
+        start_date: new Date(data[2]),
+        story_count: parseNumber(data[5]),
+        follower: parseNumber(data[6]),
+        description: data[9]
+    };
+}
+
 async function loadSearchPage(url, page = null) {
     if (!page) {
         page = await browser.newPage();
@@ -185,6 +223,14 @@ async function loadSearchPage(url, page = null) {
         stories.push(parseSearchDiv(part));
     }
 
+    let community = null;
+    if (urlParts[3].endsWith('community')) {
+        let communityHeader = await page.$$eval('#gui_table1i', part => {
+            return part.map(el => el.innerHTML);
+        });
+        community = parseCommunityDiv(communityHeader[0]);
+    }
+
     for (let story of stories) {
         if (!story.fandom) {
             if (urlParts[3].endsWith('Crossovers')) {
@@ -194,6 +240,7 @@ async function loadSearchPage(url, page = null) {
                 story.fandom = urlParts[4];
             }
         }
+        story.community = community;
     }
 
     return [url, stories];
@@ -318,6 +365,7 @@ module.exports = {
     parseNumber,
     parseChars,
     parseSearchDivData,
+    parseCommunityDiv,
     loadSearchPage,
     loadSearchPageNr,
     loadUserPage,

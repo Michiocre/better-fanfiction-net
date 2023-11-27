@@ -16,15 +16,22 @@ app.use(cors(corsOptions));
 
 async function main() {
     utils.initLogging();
-    await db.init({
-        host: process.env.DB_HOST,
-        port: process.env.DB_PORT,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_DATABASE,
-    });
-
-    await api.init();
+    
+    try {
+        await db.init({
+            host: process.env.DB_HOST,
+            port: process.env.DB_PORT,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_DATABASE,
+        });
+    
+        await api.init();
+    } catch (error) {
+        utils.error('There was an error starting the db connection.', error);
+        return;
+    }
+    
 
     let maxConcurrent = 10;
     let currentUsage = 0;
@@ -109,8 +116,6 @@ async function main() {
         res.send('Your request has been added to the <a href="/crawler">queue</a>');
     });
 
-
-
     app.get('/fandoms', async (req, res) => {
         res.send(await db.getFandoms());
     });
@@ -120,7 +125,8 @@ async function main() {
         if (!story) {
             return res.send({id: null});
         }
-        res.send({id: story.id, time: story.updated ?? story.published});
+        let communities = await db.getCommunitiesByStoryId(req.params.id);
+        res.send({id: story.id, time: story.updated ?? story.published, communities: communities.map(el => el.id)});
     });
     
     app.listen(port, () => {
