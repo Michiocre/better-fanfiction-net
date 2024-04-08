@@ -23,7 +23,9 @@ async function getFandomByName(name) {
     }
 
     name = name.replace('&amp;', '&');
-    name = name.replace(`'`, `\\'`);
+    name = name.replace('&lt;', '<');
+    name = name.replace('&gt;', '>');
+    name = name.replace('\'', '\\\'');
 
     let [rows, fields] = await connection.execute('SELECT * FROM `fandom` WHERE `name` = ? OR `display` = ?', [name, name]);
 
@@ -63,7 +65,7 @@ async function saveFandoms(category, fandoms) {
             await connection.beginTransaction();
             await connection.query(
                 'INSERT INTO `fandom` VALUES ?',
-                [newFandoms.map(fandom => [fandom.id, fandom.name, category, fandom.display])]
+                [newFandoms.map(fandom => [fandom.id, fandom.name, category, fandom.display.replace('&amp;', '&').replace('&gt;', '>')].replace('&lt;', '<'))]
             );
             await connection.commit()
         } catch (error) {
@@ -107,7 +109,7 @@ async function saveAuthors(authors) {
 async function saveCharacters(characters, pairings, fandomId) {
     if (!connection) {
         throw Error('Database connection has not been established')  
-    }    
+    }
 
     let chars = characters;
     for (let pair of pairings) {
@@ -197,19 +199,25 @@ async function saveStories(stories) {
         throw Error('Database connection has not been established')  
     }
 
-    let authors = new Set(stories.map(story => story.author));
+    let authors = stories.map(story => story.author);
 
     let community = stories[0].community;
     if (community) {
-        authors.add(community.author);
+        authors.push(community.author);
         for (const staff of community.staff) {
-            authors.add(staff);
+            authors.push(staff);
         }
     }
 
-    await saveAuthors(Array.from(authors));
+    authors = [
+        ...new Map(authors.map(obj => [obj.id, obj]))
+        .values()
+    ];
+    await saveAuthors(authors);
 
-    await saveCommunity(community);
+    if (community) {
+        await saveCommunity(community);
+    }
 
     let [rows, fields] = await connection.execute('SELECT * FROM `story`');
     let existingIds = rows.map(row => row.id);
@@ -258,15 +266,38 @@ async function saveStories(stories) {
             //Add story_character connection
             let characters = [];
             for (let char of story.characters) {
-                characters.push([(await getCharacterByNameAndFandom(char, fandom.id)).id, null]);
+                let loadedChar = await getCharacterByNameAndFandom(char, fandom.id);
+                if (loadedChar) {
+                    characters.push([loadedChar.id, 0]);
+                }
+                if (xfandom) {
+                    let loadedChar = await getCharacterByNameAndFandom(char, xfandom.id);
+                    if (loadedChar) {
+                        characters.push([loadedChar.id, 0]);
+                    }
+                }
             }
-            for (let i = 0; i < story.pairings.length; i++) {
+            for (let i = 1; i < story.pairings.length; i++) {
                 let pairCharacter = [];
                 for (let char of story.pairings[i]) {
-                    characters.push([(await getCharacterByNameAndFandom(char, fandom.id)).id, i]);
+                    let loadedChar = await getCharacterByNameAndFandom(char, fandom.id);
+                if (loadedChar) {
+                    characters.push([loadedChar.id, i]);
+                }
+                if (xfandom) {
+                    let loadedChar = await getCharacterByNameAndFandom(char, xfandom.id);
+                    if (loadedChar) {
+                        characters.push([loadedChar.id, i]);
+                    }
+                }
                 }
                 characters = characters.concat(pairCharacter);
             }
+
+            characters = [
+                ...new Map(characters.map(obj => [obj[0], obj]))
+                .values()
+            ];
 
             let [rows, fields] = await connection.execute('SELECT * FROM `story_character` WHERE story_id = ?', [story.id]);
             let existCharIds = rows.map(row => row.character_id);
@@ -279,15 +310,17 @@ async function saveStories(stories) {
                 );
             }
 
-            //Add story_community connection
-            [rows, fields] = await connection.execute('SELECT * FROM `story_community` WHERE story_id = ? AND community_id = ?', [story.id, community.id]);
-            let connectionExists = rows.length >= 1;
-
-            if (!connectionExists) {
-                await connection.query(
-                    'INSERT INTO `story_community` VALUES (?)',
-                    [[story.id, community.id]]
-                );
+            if (community) {
+                //Add story_community connection
+                [rows, fields] = await connection.execute('SELECT * FROM `story_community` WHERE story_id = ? AND community_id = ?', [story.id, community.id]);
+                let connectionExists = rows.length >= 1;
+    
+                if (!connectionExists) {
+                    await connection.query(
+                        'INSERT INTO `story_community` VALUES (?)',
+                        [[story.id, community.id]]
+                    );
+                }
             }
 
             await connection.commit()
@@ -304,6 +337,16 @@ async function getFandoms() {
     }
 
     let [rows, fields] = await connection.execute('SELECT * FROM `fandom`');
+
+    return rows;
+}
+
+async function getFandomsByCategory(category) {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.execute('SELECT * FROM `fandom` WHERE `category` = ?', [category]);
 
     return rows;
 }
@@ -337,6 +380,7 @@ module.exports = {
     saveFandoms,
     saveStories,
     getFandoms,
+    getFandomsByCategory,
     getStoryById,
     getCommunitiesByStoryId
 }

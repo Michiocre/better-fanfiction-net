@@ -1,25 +1,5 @@
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-puppeteer.use(StealthPlugin());
-const {executablePath} = require('puppeteer');
-
 const db = require('./db');
 const utils = require('./utils');
-
-const BASE_URL = 'https://www.fanfiction.net';
-
-let browser;
-async function init() {
-    if (process.env.EXECUTABLE_PATH) {
-        browser = await puppeteer.launch({headless: 'new', executablePath: process.env.EXECUTABLE_PATH, args:['--no-sandbox']});
-    } else {
-        browser = await puppeteer.launch({headless: 'new', executablePath: executablePath()});
-    }
-}
-
-async function stop() {
-    await browser.close();
-}
 
 function parseNumber(content) {
     if (!content) {
@@ -143,7 +123,7 @@ function parseSearchDivData(content) {
 
 function parseSearchDivHeader(content) {
     try {
-        let pattern = new RegExp(/^\s*<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?.*?href="\/u\/(\d+).*?>(.*?)<\/a>(?:.*?href="\/r.*?)?\s*$/);
+        let pattern = new RegExp(/\s*<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?(?:.*?href="\/u\/(\d+).*?>(.*?)<\/a>)?(?:.*?href="\/r.*?)?\s*$/);
         let data = pattern.exec(content);
 
         return {
@@ -204,18 +184,8 @@ function parseCommunityDiv(content) {
     };
 }
 
-async function loadSearchPage(url, page = null) {
-    if (!page) {
-        page = await browser.newPage();
-    }
-
+function parseSearchPage(url, communityHeader, parts) {
     let urlParts = url.split('/');
-
-    await page.goto(url);
-
-    let parts = await page.$$eval('.z-list', parts => {
-        return parts.map(el => el.innerHTML);
-    });
 
     let stories = [];
 
@@ -225,10 +195,7 @@ async function loadSearchPage(url, page = null) {
 
     let community = null;
     if (urlParts[3].endsWith('community')) {
-        let communityHeader = await page.$$eval('#gui_table1i', part => {
-            return part.map(el => el.innerHTML);
-        });
-        community = parseCommunityDiv(communityHeader[0]);
+        community = parseCommunityDiv(communityHeader);
     }
 
     for (let story of stories) {
@@ -243,131 +210,53 @@ async function loadSearchPage(url, page = null) {
         story.community = community;
     }
 
-    return [url, stories];
+    return stories;
 }
 
-async function loadSearchPageNr(category, fandom, pageNr) {
-    let page = await browser.newPage();
-
-    let lastPage;
-    if (pageNr < 0) {
-        await page.goto(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10`);
-        const url = await page.$$eval('center a', links => {
-            let last = links[links.length - 2];
-            return [last.innerHTML, last.getAttribute('href')];
-        });
-
-        lastPage = parseInt(url[1].split('=')[3]);
-        pageNr = lastPage + pageNr + 1;
-    }
-
-    return await loadSearchPage(`${BASE_URL}/${category}/${fandom}/?&srt=2&r=10&p=${pageNr}`, page);
-}
-
-async function loadUserPage(userId, page = null) {
-    if (!page) {
-        page = await browser.newPage();
-    }
-
-    let url = `${BASE_URL}/u/${userId}`; 
-
-    await page.goto(url);
-    const data = await page.$$('.z-list');
-
+function parseUserPage(url, parts) {
     let urlParts = url.split('/');
 
     let stories = [];
 
-    for (let block of data) {
-        try {
-            let aHandlers = await block.$$('a');
-            let dataDiv = await block.$('div');
-            let dataInnerDiv = await dataDiv.$('.z-padtop2');
+    for (let part of parts) {
+        let story = parseSearchDiv(part);
         
-            let metaData = await page.evaluate(el => el.outerHTML, dataDiv);
-            let metaDataText = await page.evaluate(el => el.textContent, dataInnerDiv);
-            let description = await page.evaluate(el => el.textContent, dataDiv);
-            description = description.slice(0, -metaDataText.length)
-        
-            let titleValues = await page.evaluate(el => {
-                return {
-                    id: el.getAttribute('href').split('/')[2],
-                    title: el.textContent,
-                }
-            }, aHandlers[0]);
-
-            titleValues.id = parseNumber(titleValues.id);
-
-            aHandlers.shift();
-
-            let authorValues = {};
-            for (let a of aHandlers) {
-                tempValues = await page.evaluate(el => {
-                    return {
-                        id: el.getAttribute('href'),
-                        name: el.textContent
-                    }
-                }, a);
-
-                if (tempValues.id.startsWith('/u/')) {
-                    authorValues.id = tempValues.id.split('/')[2];
-                    authorValues.name = tempValues.name;
-                    break;
-                }
-            }
-
-            if (!authorValues.id) {
-                authorValues.id = urlParts[4];
-
-                let wrapper = await page.$('#content_wrapper_inner');
-                let authorSpan = await wrapper.$('span');
-
-                authorValues.name = await page.evaluate(el => el.textContent.trim(), authorSpan);
-            }
-            authorValues.id = parseNumber(authorValues.id);
-
-            let metaValues = parseSearchDivData(metaData);
-
-            stories.push({...titleValues, author: {id: authorValues.id, name: authorValues.name}, description, ...metaValues});
-        } catch (error) {
-            utils.warn(`Could not load one block on page ${url} here is the block:\n`, await page.evaluate(el => el.innerHTML, block), error);
+        if (story.author.id == 0) {
+            story.author.id = parseNumber(urlParts[4]);
+            story.author.name = urlParts[5];
         }
+        
+        stories.push(story);
     }
-
-    await page.close();
-    return [url, stories];
+    return stories;
 }
 
-async function loadFandoms() {
-    let page = await browser.newPage();
+async function loadFandoms(url, links) {
+    let urlParts = url.split('/');
 
-    await page.goto(BASE_URL);
-    let categories = await page.$$eval('#gui_table2i a', el => el.map(a => a.getAttribute('href').split('/')[2]));
+    let category = urlParts[4];
     
-    for (let category of categories) {
-        await page.goto(`${BASE_URL}/crossovers/${category}/`);
-        let fandoms = await page.$$eval('#list_output a', el => el.map(a => ({
-            name: a.getAttribute('href').split('/')[2],
-            id: parseInt(a.getAttribute('href').split('/')[3]),
-            display: a.getAttribute('title')
-        })));
-        await db.saveFandoms(category, fandoms);
-        utils.log(`Loaded fandom ${category}`);
-    }
-
-    await page.close();
+    let fandoms = links.map(a => {
+        let pattern = new RegExp(/<a href="(.*)" title="(.*)">(.*)<\/a>/);
+        let data = pattern.exec(a);
+        
+        return {
+            name: data[1].split('/')[2],
+            id: parseInt(data[1].split('/')[3]),
+            display: data[2]
+        }
+    });
+    await db.saveFandoms(category, fandoms);
+    utils.log(`Loaded fandom ${category}`);
 }
 
 module.exports = {
-    init,
-    stop,
     parseDate,
     parseNumber,
     parseChars,
     parseSearchDivData,
     parseCommunityDiv,
-    loadSearchPage,
-    loadSearchPageNr,
-    loadUserPage,
+    parseSearchPage,
+    parseUserPage,
     loadFandoms
 }

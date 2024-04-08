@@ -229,19 +229,66 @@ test('api parseCommunityDiv', () => {
     });
 });
 
-describe('api loadPages', () => {
-    beforeAll(async () =>  await api.init());
+test('api parseSearchPage', () => {
+    expect(api.parseSearchPage('https://www.fanfiction.net/book/Harry-Potter/', '', [
+        `<span class="bff_span bff_error">not registered</span><a class="stitle" href="/s/13476426/1/The-Inner-Eye"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/6038841/75/" data-original="/image/6038841/75/" width="50" height="66">The Inner Eye</a> <a href="/s/13476426/6/The-Inner-Eye"><span class="icon-chevron-right xicon-section-arrow"></span></a> by <a href="/u/12901889/Bluurr">Bluurr</a> <a class="reviews" href="/r/13476426/">reviews</a>
+        <div class="z-indent z-padtop">AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry<div class="z-padtop2 xgray">Rated: T - English - Family/Adventure - Chapters: 6 - Words: 12,368 - Reviews: 23 - Favs: 110 - Follows: 167 - Updated: <span data-xutime="1712589654">16m ago</span> - Published: <span data-xutime="1578845283">Jan 12, 2020</span> - [Petunia D., OC] Harry P.</div></div>`
+    ])).toStrictEqual([{
+        author: {id: 12901889, name: "Bluurr"},
+        chapters: 6,
+        characters: ["Harry P."],
+        community: null,
+        completed: false,
+        description: "AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry",
+        fandom: "Harry-Potter",
+        favs: 110,
+        follows: 167,
+        genreA: "Family",
+        genreB: "Adventure",
+        id: 13476426,
+        image: "/image/6038841/75/",
+        language: "English",
+        pairings: [["Petunia D.", "OC"]],
+        published: new Date(1578845283 * 1000),
+        rated: "T", 
+        reviews: 23, 
+        title: "The Inner Eye", 
+        updated: new Date(1712589654 * 1000), 
+        words: 12368, 
+        xfandom: null
+    }]);
+});
 
-    test('api loadPageByNr', async () => {
-        let stories = await api.loadSearchPageNr('book', 'Harry-Potter', 0);
-        expect(stories[1].length).toBe(25);
-    }, 10000);
-    
-    test('api loadPageByUser', async () => {
-        let stories = await api.loadUserPage(10000);
-        expect(stories[1].length).toBe(4);
-    }, 10000);
-    
-    afterAll(async () =>  await api.stop());
+test('api parseUserPage', () => {
+    expect(api.parseUserPage('https://www.fanfiction.net/u/5503799/Paersephone', [
+        `<span class="bff_span bff_success">up to date</span><a class="stitle" href="/s/13474353/1/Drabbles-OS-and-passing-thoughts"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/5920357/75/" data-original="/image/5920357/75/" width="50" height="66">Drabbles, OS, and passing thoughts</a> <a href="/s/13474353/2/Drabbles-OS-and-passing-thoughts"><span class="icon-chevron-right xicon-section-arrow"></span></a>
+        <div class="z-indent z-padtop">Multiple pairings and sometimes no pairings at all. I just want to have a kind of masterfic where everything can be stored, so it doesn't get too crowded on my profile yet. All HP-related, some AU, some canon. FIRST FOR NOW : Someone Who Cares. Neville doesn't feel so well after discovering who exactly was usurpating Moody's identity.<div class="z-padtop2 xgray">Harry Potter - Rated: T - English - Chapters: 2 - Words: 1,068 - Follows: 1 - Published: <span data-xutime="1578593189">Jan 9, 2020</span> - Complete</div></div>
+        `])
+    ).toStrictEqual([{
+        id: 13474353,
+        title: 'Drabbles, OS, and passing thoughts',
+        image: "/image/5920357/75/",
+        fandom: 'Harry Potter',
+        author: {
+            id: 5503799,
+            name: "Paersephone"
+        },
+        xfandom: null,
+        rated: 'T',
+        language: 'English',
+        genreA: null,
+        genreB: null,
+        chapters: 2,
+        words: 1068,
+        reviews: 0,
+        favs: 0,
+        follows: 1,
+        updated: undefined,
+        published: new Date(1578593189 * 1000),
+        characters: [],
+        pairings: [],
+        completed: true,
+        description: "Multiple pairings and sometimes no pairings at all. I just want to have a kind of masterfic where everything can be stored, so it doesn't get too crowded on my profile yet. All HP-related, some AU, some canon. FIRST FOR NOW : Someone Who Cares. Neville doesn't feel so well after discovering who exactly was usurpating Moody's identity."
+    }]);
 });
 

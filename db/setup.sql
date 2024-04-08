@@ -55,8 +55,8 @@ CREATE TABLE IF NOT EXISTS `betterff`.`story_fandom` (
 CREATE TABLE IF NOT EXISTS `betterff`.`story_character` (
     `story_id` INT NOT NULL,
     `character_id` INT NOT NULL,
-    `pairing` INT DEFAULT NULL,
-    PRIMARY KEY (`story_id`, `character_id`),
+    `pairing` INT DEFAULT(0) NOT NULL,
+    PRIMARY KEY (`story_id`, `character_id`, `pairing`),
     FOREIGN KEY (`story_id`) REFERENCES `betterff`.`story`(`id`),
     FOREIGN KEY (`character_id`) REFERENCES `betterff`.`character`(`id`)
 ) ENGINE = InnoDB;
@@ -89,3 +89,6 @@ CREATE TABLE IF NOT EXISTS `betterff`.`community_author` (
     FOREIGN KEY (`community_id`) REFERENCES `betterff`.`community`(`id`),
     FOREIGN KEY (`author_id`) REFERENCES `betterff`.`author`(`id`)
 ) ENGINE = InnoDB;
+
+
+INSERT INTO `betterff`.`fandom` VALUES (0, 'All Categories', 'general', 'All Categories');
