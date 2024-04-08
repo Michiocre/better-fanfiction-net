@@ -1,4 +1,4 @@
-FROM ghcr.io/puppeteer/puppeteer
+FROM node
 
 USER root
 
@@ -6,8 +6,5 @@ COPY package*.json ./
 RUN npm install --production
 
 COPY . .
-
-RUN chown -R pptruser ./logs
-USER pptruser
 
 CMD [ "npm", "start"]
