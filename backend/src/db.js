@@ -27,7 +27,7 @@ async function getFandomByName(name) {
     name = name.replace('&gt;', '>');
     name = name.replace('\'', '\\\'');
 
-    let [rows, fields] = await connection.execute('SELECT * FROM `fandom` WHERE `name` = ? OR `display` = ?', [name, name]);
+    let [rows, fields] = await connection.execute('SELECT * FROM `fandom` WHERE `name` = ?', [name]);
 
     if (rows.length < 1) {
         return null;
@@ -50,94 +50,81 @@ async function getCharacterByNameAndFandom(name, fandom_id) {
     return rows[0];
 }
 
-async function saveFandoms(category, fandoms) {
+async function saveFandoms(fandoms) {
     if (!connection) {
         throw Error('Database connection has not been established')  
     }
-
-    let [rows, fields] = await connection.execute('SELECT * FROM `fandom`');
-    let existingIds = rows.map(row => row.id);
-
-    let newFandoms = fandoms.filter(f => !existingIds.includes(f.id));
-
-    if (newFandoms.length > 0) {
-        try {
-            await connection.beginTransaction();
+    
+    try {
+        await connection.beginTransaction();
+        for (const fandom of fandoms) {
             await connection.query(
-                'INSERT INTO `fandom` VALUES ?',
-                [newFandoms.map(fandom => [fandom.id, fandom.name, category, fandom.display.replace('&amp;', '&').replace('&gt;', '>')].replace('&lt;', '<'))]
+                'CALL `saveFandom`(?, ?, ?)',
+                [fandom.id, fandom.name, fandom.category]
             );
-            await connection.commit()
-        } catch (error) {
-            utils.warn(error);
-            await connection.rollback()
-        }        
+        }
+        await connection.commit()
+    } catch (error) {
+        utils.warn(error);
+        await connection.rollback();
+        return -1;
     }
+
+    return 0;
 }
 
 async function saveAuthors(authors) {
     if (!connection) {
         throw Error('Database connection has not been established')  
     }
-
-    let [rows, fields] = await connection.execute('SELECT * FROM `author`');
-    let existingIds = rows.map(row => row.id);
-
+    
     try {
         await connection.beginTransaction();
-        let newAuthors = new Map();
-        for (let author of authors) {
-            if (!existingIds.includes(author.id)) {
-                newAuthors.set(author.id, author.name);
-            }
-        }
-        newAuthors = Array.from(newAuthors);
-
-        if (newAuthors.length > 0) {
+        for (const author of authors) {
             await connection.query(
-                'INSERT INTO `author` VALUES ?',
-                [newAuthors]
+                'CALL `saveAuthor`(?, ?)',
+                [author.id, author.name]
             );
         }
         await connection.commit()
     } catch (error) {
         utils.warn(error);
-        await connection.rollback()
-    }    
+        await connection.rollback();
+        return -1;
+    }
+
+    return 0;
 };
 
-async function saveCharacters(characters, pairings, fandomId) {
+async function saveCharacters(characters, pairings, fandomId, xfandomId = null) {
     if (!connection) {
         throw Error('Database connection has not been established')  
     }
 
-    let chars = characters;
-    for (let pair of pairings) {
-        chars = chars.concat(pair);
+    let chars = new Set(characters);
+    if (pairings) {
+        for (let pair of pairings) {
+            chars.add(pair[0]);
+            chars.add(pair[1]);
+        }
     }
-
-    chars = Array.from(new Set(chars));
-
-    let [rows, fields] = await connection.execute('SELECT * FROM `character` WHERE fandom_id = ?', [fandomId]);
-    let existingChars = rows.map(row => row.name);
 
     try {
         await connection.beginTransaction();
-        let newChars = chars.filter(char => !existingChars.includes(char)).map(char => {
-            return [char, fandomId];
-        });
-
-        if (newChars.length > 0) {
+        for (const char of chars) {
             await connection.query(
-                'INSERT INTO `character` (name, fandom_id) VALUES ?',
-                [newChars]
+                'CALL `saveCharacter`(?, ?, ?)',
+                [char, fandomId, xfandomId]
             );
         }
         await connection.commit()
     } catch (error) {
         utils.warn(error);
-        await connection.rollback()
-    }    
+        await connection.rollback();
+        return -1;
+    }
+
+    return 0;
 };
 
 async function saveCommunity(community) {
@@ -219,6 +206,8 @@ async function saveStories(stories) {
         await saveCommunity(community);
     }
 
+    let saved = [];
+
     let [rows, fields] = await connection.execute('SELECT * FROM `story`');
     let existingIds = rows.map(row => row.id);
 
@@ -245,7 +234,7 @@ async function saveStories(stories) {
             utils.warn('Could not find fandom, maybe try running getFandoms again', story.xfandom);
             continue;
         }
-        await saveCharacters(story.characters, story.pairings, fandom.id);
+        await saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
     
         try {
             await connection.beginTransaction();
@@ -324,11 +313,14 @@ async function saveStories(stories) {
             }
 
             await connection.commit()
+            saved.push(story);
         } catch (error) {
             utils.warn(error);
             await connection.rollback()
         }
     }
+
+    return saved;
 }
 
 async function getFandoms() {
@@ -339,6 +331,16 @@ async function getFandoms() {
     let [rows, fields] = await connection.execute('SELECT * FROM `fandom`');
 
     return rows;
+}
+
+async function getFandomCount() {
+    if (!connection) {
+        throw Error('Database connection has not been established')  
+    }
+
+    let [rows, fields] = await connection.execute('SELECT COUNT(*) as count FROM `fandom`');
+
+    return rows[0];
 }
 
 async function getFandomsByCategory(category) {
@@ -382,5 +384,6 @@ module.exports = {
     getFandoms,
     getFandomsByCategory,
     getStoryById,
-    getCommunitiesByStoryId
+    getCommunitiesByStoryId,
+    getFandomCount
 }

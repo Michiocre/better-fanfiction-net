@@ -184,7 +184,7 @@ function parseCommunityDiv(content) {
     };
 }
 
-function parseSearchPage(url, communityHeader, parts) {
+function parseSearchPage(url, parts, communityHeader, fandomName) {
     let urlParts = url.split('/');
 
     let stories = [];
@@ -204,7 +204,7 @@ function parseSearchPage(url, communityHeader, parts) {
                 story.fandom = parseNumber(urlParts[4]);
                 story.xfandom = parseNumber(urlParts[5]);
             } else {
-                story.fandom = urlParts[4];
+                story.fandom = fandomName;
             }
         }
         story.community = community;
@@ -231,23 +231,12 @@ function parseUserPage(url, parts) {
     return stories;
 }
 
-async function loadFandoms(url, links) {
-    let urlParts = url.split('/');
-
-    let category = urlParts[4];
-    
-    let fandoms = links.map(a => {
-        let pattern = new RegExp(/<a href="(.*)" title="(.*)">(.*)<\/a>/);
-        let data = pattern.exec(a);
-        
-        return {
-            name: data[1].split('/')[2],
-            id: parseInt(data[1].split('/')[3]),
-            display: data[2]
-        }
-    });
-    await db.saveFandoms(category, fandoms);
-    utils.log(`Loaded fandom ${category}`);
+async function loadFandoms(fandoms) {
+    if (await db.saveFandoms(fandoms) < 0) {
+        return -1;
+    }
+    utils.log(`Loaded fandoms`);
+    return 0;
 }
 
 module.exports = {

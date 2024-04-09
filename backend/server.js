@@ -31,30 +31,39 @@ async function main() {
         return;
     }
 
-    let savingQueue = [];
-
     app.post('/parser/page', async (req, res) => {
         let urlParts = req.body.url.split('/');
 
         let parts = req.body.elements.map(utils.b64_to_utf8);
         let community = utils.b64_to_utf8(req.body.communityEl);
 
+        let savedStories = [];
+
         if (urlParts[3] == 'u') {
             let stories = api.parseUserPage(req.body.url, parts);
-            savingQueue.push(stories);
             utils.log('Finished parsing:', req.body.url, "storyCount:", stories.length);
+            savedStories = await db.saveStories(stories);
+            utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
         } else {
-            let stories = api.parseSearchPage(req.body.url, community, parts);
-            savingQueue.push(stories);
+            let stories = api.parseSearchPage(req.body.url, parts, community, req.body.fandomName);
             utils.log('Finished parsing:', req.body.url, "storyCount:", stories.length);
+            savedStories = await db.saveStories(stories);
+            utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
         }
-        res.status(200).send();
+
+        res.status(200).send(savedStories.map(el => ({
+            id: el.id,
+            time: el.updated ?? el.published,
+            communities: [el.community]
+        })));
     });
 
     app.post('/parser/fandoms', async (req, res) => {
-        let links = req.body.elements.map(utils.b64_to_utf8);
-        await api.loadFandoms(req.body.url, links);
-        res.status(200).send();
+        let fandoms = req.body.elements;
+        if (await api.loadFandoms(fandoms) < 0) {
+            return res.status(500).send();
+        };
+        return res.status(200).send();
     });
 
     app.get('/fandoms', async (req, res) => {
@@ -62,33 +71,32 @@ async function main() {
     });
 
     app.get('/fandoms/:category', async (req, res) => {
+        if (req.params.category == 'count') {
+            return res.send(await db.getFandomCount());
+        }
         res.send(await db.getFandomsByCategory(req.params.category));
     });
 
-    app.get('/story/:id/updated', async (req, res) => {
-        let story = await db.getStoryById(req.params.id);
-        if (!story) {
-            return res.send({id: null});
+    app.post('/stories/status', async (req, res) => {
+        let ids = req.body.ids;
+        let stories = [];
+        for (const id of ids) {
+            let story = await db.getStoryById(id);
+            if (story) {
+                let communities = await db.getCommunitiesByStoryId(id);
+                stories.push({
+                    id: story.id,
+                    time: story.updated ?? story.published,
+                    communities: communities.map(el => el.id)
+                });
+            }
         }
-        let communities = await db.getCommunitiesByStoryId(req.params.id);
-        res.send({id: story.id, time: story.updated ?? story.published, communities: communities.map(el => el.id)});
+        res.status(200).send(stories);
     });
     
     app.listen(port, () => {
         utils.log(`Startup: Example app listening on port ${port}`);
     });
-
-    let doneSaving = true;
-    setInterval(async () => {
-        if (doneSaving) {
-            doneSaving = false;
-            for (let i = 0; i < savingQueue.length; i++) {
-                let stories = savingQueue.shift();
-                await db.saveStories(stories);
-            }
-            doneSaving = true;
-        }
-    }, 1000);
 }
 main();
 

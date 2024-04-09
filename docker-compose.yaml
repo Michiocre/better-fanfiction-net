@@ -2,8 +2,7 @@ version: '3'
 
 volumes:
   betterff_db:
-
-
+  
 services:
   backend:
     build: backend
