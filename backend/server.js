@@ -45,7 +45,7 @@ async function main() {
             savedStories = await db.saveStories(stories);
             utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
         } else {
-            let stories = api.parseSearchPage(req.body.url, parts, community, req.body.fandomName);
+            let stories = api.parseSearchPage(req.body.url, parts, req.body.fandomName, community, req.body.communityName);
             utils.log('Finished parsing:', req.body.url, "storyCount:", stories.length);
             savedStories = await db.saveStories(stories);
             utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
@@ -60,7 +60,7 @@ async function main() {
 
     app.post('/parser/fandoms', async (req, res) => {
         let fandoms = req.body.elements;
-        if (await api.loadFandoms(fandoms) < 0) {
+        if (await api.parseFandoms(fandoms) < 0) {
             return res.status(500).send();
         };
         return res.status(200).send();
@@ -87,7 +87,7 @@ async function main() {
                 stories.push({
                     id: story.id,
                     time: story.updated ?? story.published,
-                    communities: communities.map(el => el.id)
+                    communities: communities.map(el => ({id: el.id}))
                 });
             }
         }

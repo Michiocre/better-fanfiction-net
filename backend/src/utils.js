@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require("path");
-let loggingPath = path.join('logs','default.txt');
+let loggingPath = path.join('logs',new Date().toJSON().slice(0,19).replaceAll(':', '-') + '.txt');
 
 function initLogging() {    
     if (!fs.existsSync(loggingPath)) {
         fs.mkdirSync(path.dirname(loggingPath), {recursive: true});
+        fs.writeFileSync(loggingPath, "");
     }
-    fs.appendFileSync(loggingPath, '\n')
 }
 
 function log(...args) {

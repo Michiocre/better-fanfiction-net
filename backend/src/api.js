@@ -184,7 +184,7 @@ function parseCommunityDiv(content) {
     };
 }
 
-function parseSearchPage(url, parts, communityHeader, fandomName) {
+function parseSearchPage(url, parts, fandomName, communityHeader, communityName) {
     let urlParts = url.split('/');
 
     let stories = [];
@@ -196,6 +196,7 @@ function parseSearchPage(url, parts, communityHeader, fandomName) {
     let community = null;
     if (urlParts[3].endsWith('community')) {
         community = parseCommunityDiv(communityHeader);
+        community.name = communityName;
     }
 
     for (let story of stories) {
@@ -231,7 +232,7 @@ function parseUserPage(url, parts) {
     return stories;
 }
 
-async function loadFandoms(fandoms) {
+async function parseFandoms(fandoms) {
     if (await db.saveFandoms(fandoms) < 0) {
         return -1;
     }
@@ -247,5 +248,5 @@ module.exports = {
     parseCommunityDiv,
     parseSearchPage,
     parseUserPage,
-    loadFandoms
+    parseFandoms
 }

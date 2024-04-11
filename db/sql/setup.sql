@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS `betterff`.`story_character` (
 
 CREATE TABLE IF NOT EXISTS `betterff`.`community` (
     `id` INT NOT NULL,
+    `name` varchar(64) NOT NULL,
     `founder_id` INT NOT NULL,
     `focus_id` INT NOT NULL,
     `start_date` DATETIME NOT NULL,

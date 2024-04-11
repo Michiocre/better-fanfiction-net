@@ -58,9 +58,12 @@ async function saveFandoms(fandoms) {
     try {
         await connection.beginTransaction();
         for (const fandom of fandoms) {
+
+            fandom.name = fandom.name.replace(/\s{2,}/, ' ');
+
             await connection.query(
                 'CALL `saveFandom`(?, ?, ?)',
-                [fandom.id, fandom.name, fandom.category]
+                [fandom.id, fandom.name , fandom.category]
             );
         }
         await connection.commit()
@@ -132,10 +135,7 @@ async function saveCommunity(community) {
         throw Error('Database connection has not been established')  
     }
 
-    let [rows, fields] = await connection.query('SELECT * FROM `community` WHERE id = ?', community.id);
-    let communityExists = rows.length >= 1;
-
-    let fandom; 
+    let fandom;
     if (typeof community.fandom == 'number') {
         fandom = {id: community.fandom};
     } else {
@@ -149,28 +149,20 @@ async function saveCommunity(community) {
 
     try {
         await connection.beginTransaction();
-        if (!communityExists) {
-            //Insert new community
-            await connection.query(
-                'INSERT INTO `community` VALUES (?)',
-                [[community.id, community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description]]
-            );
-        } else {
-            //Update existing community
-            await connection.query(
-                'UPDATE `community` SET founder_id=?, focus_id=?, start_date=?, story_count=?, followers=?, description=? WHERE id=?',
-                [community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description, community.id]
-            );
-        }
 
-        let [rows, fields] = await connection.execute('SELECT * FROM `community_author` WHERE community_id = ?', [community.id]);
-        let existingStaffIds = rows.map(row => row.author_id);
+        await saveAuthors([community.author, ...community.staff]);
 
-        let newStaff = community.staff.filter(staff => !existingStaffIds.includes(staff.id));
-        if (newStaff.length > 0) {
+        await connection.query(
+            'CALL `saveCommunity`(?, ?, ?, ?, ?, ?, ?, ?)',
+            [community.id, community.name, community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description]
+        );
+
+        let staff = [community.author, ...community.staff];
+        
+        for (const author of staff) {
             await connection.query(
-                'INSERT INTO `community_author` VALUES ?',
-                [newStaff.map(staff => ([community.id, staff.id]))]
+                'CALL `saveCommunityAuthor`(?, ?)',
+                [community.id, staff.id]
             );
         }
 
@@ -187,21 +179,13 @@ async function saveStories(stories) {
     }
 
     let authors = stories.map(story => story.author);
-
-    let community = stories[0].community;
-    if (community) {
-        authors.push(community.author);
-        for (const staff of community.staff) {
-            authors.push(staff);
-        }
-    }
-
     authors = [
         ...new Map(authors.map(obj => [obj.id, obj]))
         .values()
     ];
     await saveAuthors(authors);
 
+    let community = stories[0].community;
     if (community) {
         await saveCommunity(community);
     }
@@ -231,7 +215,7 @@ async function saveStories(stories) {
             continue;
         }
         if (story.xfandom && !xfandom) {
-            utils.warn('Could not find fandom, maybe try running getFandoms again', story.xfandom);
+            utils.warn('Could not find xfandom, maybe try running getFandoms again', story.xfandom);
             continue;
         }
         await saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
