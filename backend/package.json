@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Michiocre/better-fanfiction-net#readme",
   "dependencies": {
+    "better-sqlite3": "^9.6.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",

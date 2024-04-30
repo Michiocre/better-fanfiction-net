@@ -1,4 +1,3 @@
-const db = require('./db');
 const utils = require('./utils');
 
 function parseNumber(content) {
@@ -232,14 +231,6 @@ function parseUserPage(url, parts) {
     return stories;
 }
 
-async function parseFandoms(fandoms) {
-    if (await db.saveFandoms(fandoms) < 0) {
-        return -1;
-    }
-    utils.log(`Loaded fandoms`);
-    return 0;
-}
-
 module.exports = {
     parseDate,
     parseNumber,
@@ -247,6 +238,5 @@ module.exports = {
     parseSearchDivData,
     parseCommunityDiv,
     parseSearchPage,
-    parseUserPage,
-    parseFandoms
+    parseUserPage
 }

@@ -5,8 +5,12 @@ const cors = require('cors');
 const port = process.env.PORT;
 
 const utils = require('./src/utils');
-const api = require('./src/api');
-const db = require('./src/db');
+const parser = require('./src/parser');
+
+let db = require('./src/db');
+if (process.env.DB_TYPE == 'SQLITE') {
+    db = require('./src/sqlite');
+}
 
 const corsOptions = {
     origin: 'https://www.fanfiction.net',
@@ -19,13 +23,17 @@ async function main() {
     utils.initLogging();
     
     try {
-        await db.init({
-            host: process.env.DB_HOST,
-            port: process.env.DB_PORT,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASSWORD,
-            database: process.env.DB_DATABASE,
-        });
+        if (process.env.DB_TYPE == 'SQLITE') {
+            await db.init(process.env.DB_FILE);
+        } else {
+            await db.init({
+                host: process.env.DB_HOST,
+                port: process.env.DB_PORT,
+                user: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+                database: process.env.DB_DATABASE,
+            });
+        }
     } catch (error) {
         utils.error('There was an error starting the db connection.', error);
         return;
@@ -40,12 +48,12 @@ async function main() {
         let savedStories = [];
 
         if (urlParts[3] == 'u') {
-            let stories = api.parseUserPage(req.body.url, parts);
+            let stories = parser.parseUserPage(req.body.url, parts);
             utils.log('Finished parsing:', req.body.url, "storyCount:", stories.length);
             savedStories = await db.saveStories(stories);
             utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
         } else {
-            let stories = api.parseSearchPage(req.body.url, parts, req.body.fandomName, community, req.body.communityName);
+            let stories = parser.parseSearchPage(req.body.url, parts, req.body.fandomName, community, req.body.communityName);
             utils.log('Finished parsing:', req.body.url, "storyCount:", stories.length);
             savedStories = await db.saveStories(stories);
             utils.log('Finished saving:', req.body.url, "savedCount:", savedStories.length);
@@ -60,9 +68,9 @@ async function main() {
 
     app.post('/parser/fandoms', async (req, res) => {
         let fandoms = req.body.elements;
-        if (await api.parseFandoms(fandoms) < 0) {
+        if (await db.saveFandoms(fandoms) < 0) {
             return res.status(500).send();
-        };
+        }
         return res.status(200).send();
     });
 
