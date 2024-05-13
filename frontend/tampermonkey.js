@@ -43,7 +43,7 @@ let settings = {
         return;
     }
 
-    //appendOverlay()
+    appendOverlay()
 
     let communityId = null;
     if (window.location.pathname.startsWith('/community')) {
@@ -302,8 +302,6 @@ function appendCss() {
             position: absolute;
             top: 100px;
             right: 0px;
-            width: 200px;
-            height: 200px;
             z-index: 1000;
         }
     `);
@@ -365,8 +363,24 @@ function appendDarkMode() {
 function appendOverlay() {
     let overlay = document.createElement("div");
     overlay.innerHTML = `
-    <div class="bff_overlay">
-        WHAT IS GOING ON
+    <div style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff_overlay">
+    <div class="tcat" style="border-bottom: 1px solid #ddd; background-color: transparent"><span><b>Settings</b></span></div>
+        <table class="table">
+            <tbody>
+                <tr>
+                    <td style="border-left: none;">Backend Url</td>
+                    <td><input class="span2" name="backendUrl" id="backend-url" type="text" placeholder="localhost:8888" title="BackendUrl"></td>
+                </tr>
+                <tr>
+                    <td style="border-left: none;">Autoload</td>
+                    <td><input onclick="" type="checkbox" value="1" name="autoload"></td>
+                </tr>
+                <tr>
+                    <td style="border-left: none;">Darkmode</td>
+                    <td><input onclick="" type="checkbox" value="1" name="darkmode"></td>
+                </tr>
+            </tbody>
+        </table>
     </div>
     `;
     document.body.append(overlay.children[0]);
