@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require("path");
-let loggingPath = path.join('logs',new Date().toJSON().slice(0,19).replaceAll(':', '-') + '.txt');
+//let loggingPath = path.join('logs',new Date().toJSON().slice(0,19).replaceAll(':', '-') + '.txt');
+let loggingPath = path.join('logs','log.txt');
 
 function initLogging() {    
     if (!fs.existsSync(loggingPath)) {

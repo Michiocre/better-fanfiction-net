@@ -25,7 +25,7 @@ let settings = {
     'use strict';
 
     const loadedSettings = localStorage.getItem("betterff");
-    if (loadedSettings && false) {
+    if (loadedSettings) {
         settings = JSON.parse(loadedSettings);
         console.log("Loaded Settings from storage");
     } else {
@@ -260,6 +260,9 @@ function handleFandomLoader() {
 
 function appendCss() {
     GM_addStyle(`
+        html {
+            overflow-x: hidden;
+        }
         .bff {
             position: relative;
         }
@@ -304,12 +307,16 @@ function appendCss() {
             right: 0px;
             z-index: 1000;
         }
+
+        .bff_overlay.closed {
+            transform: translateX(100%);
+        }
     `);
 }
 
 function appendDarkMode() {
     GM_addStyle(`
-        body {
+        body, select, textarea, input {
             color: #e6edf3 !important;
         }
 
@@ -340,7 +347,7 @@ function appendDarkMode() {
 
         .dropdown-menu > li > a:hover {color: #e6edf3 !important;}
 
-        #content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer   {
+        #content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff_overlay   {
             background-color: #010409 !important;
             border-color: #242a30 !important;
             box-shadow: none !important;
@@ -350,7 +357,7 @@ function appendDarkMode() {
             background: #242a30 !important;
         }
 
-        #content_wrapper_inner, .tcat, .table-bordered {
+        #content_wrapper_inner, .tcat, .table-bordered, td {
             border-color: #242a30 !important;
         }
 
@@ -358,30 +365,47 @@ function appendDarkMode() {
             background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
         }
     `);
-}
-
+} 
 function appendOverlay() {
     let overlay = document.createElement("div");
     overlay.innerHTML = `
-    <div style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff_overlay">
-    <div class="tcat" style="border-bottom: 1px solid #ddd; background-color: transparent"><span><b>Settings</b></span></div>
-        <table class="table">
-            <tbody>
-                <tr>
-                    <td style="border-left: none;">Backend Url</td>
-                    <td><input class="span2" name="backendUrl" id="backend-url" type="text" placeholder="localhost:8888" title="BackendUrl"></td>
-                </tr>
-                <tr>
-                    <td style="border-left: none;">Autoload</td>
-                    <td><input onclick="" type="checkbox" value="1" name="autoload"></td>
-                </tr>
-                <tr>
-                    <td style="border-left: none;">Darkmode</td>
-                    <td><input onclick="" type="checkbox" value="1" name="darkmode"></td>
-                </tr>
-            </tbody>
-        </table>
+    <div id="betterff-overlay" style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff_overlay ${settings.overlayOpen?'':'closed'}">
+        <button class="btn" id="betterff-settings-button" style="position: absolute; transform: translateX(-100%);">!</button>
+        <form id="betterff-settings-form" action="javascript:;">
+            <div class="tcat" style="background-color: transparent !important"><span><b>Settings</b></span></div>
+            <table class="table table-bordered">
+                <tbody>
+                    <tr>
+                        <td style="border-left: none;">Backend Url</td>
+                        <td><input class="span2" name="url" id="backend-url" type="text" value="${settings.url}" title="BackendUrl"></td>
+                    </tr>
+                    <tr>
+                        <td style="border-left: none;">Autoload</td>
+                        <td><input onclick="" type="checkbox" name="autoLoad" value="1" ${settings.autoLoad?'checked':''}></td>
+                    </tr>
+                    <tr>
+                        <td style="border-left: none;">Darkmode</td>
+                        <td><input onclick="" type="checkbox" name="darkMode" value="1" ${settings.darkMode?'checked':''}></td>
+                    </tr>
+                </tbody>
+            </table>
+            <button type="submit" class="btn">Save</button>
+        </form>
     </div>
     `;
     document.body.append(overlay.children[0]);
+    document.getElementById('betterff-settings-button').onclick = e => {
+        settings.overlayOpen = !settings.overlayOpen;
+        document.getElementById('betterff-overlay').classList.toggle('closed', !settings.overlayOpen);
+        localStorage.setItem("betterff", JSON.stringify(settings));
+    };
+    document.getElementById('betterff-settings-form').onsubmit = e => {
+        const formData = new FormData(e.target);
+        const formProps = Object.fromEntries(formData);
+        settings = formProps
+        settings.overlayOpen = false;
+        localStorage.setItem("betterff", JSON.stringify(settings));
+
+        location.reload();
+    };
 }
