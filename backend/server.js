@@ -61,7 +61,7 @@ async function main() {
 
         res.status(200).send(savedStories.map(el => ({
             id: el.id,
-            time: el.updated ?? el.published,
+            time: !el.updated ? el.published: el.updated,
             communities: [el.community]
         })));
     });
@@ -69,8 +69,10 @@ async function main() {
     app.post('/parser/fandoms', async (req, res) => {
         let fandoms = req.body.elements;
         if (await db.saveFandoms(fandoms) < 0) {
+            utils.error(`Failed to save fandoms`);
             return res.status(500).send();
         }
+        utils.log(`Saved ${fandoms.length} fandoms`);
         return res.status(200).send();
     });
 
@@ -94,8 +96,8 @@ async function main() {
                 let communities = await db.getCommunitiesByStoryId(id);
                 stories.push({
                     id: story.id,
-                    time: story.updated ?? story.published,
-                    communities: communities.map(el => ({id: el.id}))
+                    time: !story.updated ? story.published: story.updated,
+                    communities: communities?.map(el => ({id: el.id}))
                 });
             }
         }

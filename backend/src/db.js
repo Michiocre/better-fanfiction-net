@@ -143,7 +143,7 @@ async function saveCommunity(community) {
     }
 
     if (!fandom) {
-        utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
+        utils.warn('Could not find fandom, maybe try running getFandoms again', {fandom: community.fandom});
         return;
     }
 
@@ -211,11 +211,11 @@ async function saveStories(stories) {
         }
 
         if (!fandom) {
-            utils.warn('Could not find fandom, maybe try running getFandoms again', story.fandom);
+            utils.warn('Could not find fandom, maybe try running getFandoms again: ', {fandom: story.fandom});
             continue;
         }
         if (story.xfandom && !xfandom) {
-            utils.warn('Could not find xfandom, maybe try running getFandoms again', story.xfandom);
+            utils.warn('Could not find xfandom, maybe try running getFandoms again: ', {fandom: story.xfandom});
             continue;
         }
         await saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);

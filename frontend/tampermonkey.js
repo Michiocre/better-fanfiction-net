@@ -74,7 +74,7 @@ let settings = {
         newEl.innerText = "loading";
         newEl.classList.add('bff_loading');
         newEl.classList.add('bff_span');
-        newEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime') * 1000);
+        newEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime'));
         newEl.onclick = function (el) {
             if (el.target.classList.contains('bff_warning') || el.target.classList.contains('bff_error')) {
                 sendStories(spans, communityId);
@@ -92,20 +92,29 @@ let settings = {
         body: JSON.stringify({ids: storyIds})
     }).then(res => res.json()).then(val => {
         updateIndicators(spans, val, communityId);
+        if (settings.autoLoad) {
+            let els = document.getElementsByClassName('bff_error');
+            if (els.length > 0) {
+                els[0].click();
+            } else {
+                document.getElementsByClassName('bff_warning')[0].click();
+            }
+        }
     });
 })();
 
 function sendStories(spans, communityId) {
-    let list = document.getElementsByClassName('bff_span');
-    for (let i of list) {
-        i.classList.remove('bff_error');
-        i.classList.remove('bff_success');
-        i.classList.remove('bff_warning');
-        i.classList.add('bff_loading');
-        i.innerText = 'loading';
+    let htmlEl = Array.from(document.getElementsByClassName('z-list'));
+    htmlEl = htmlEl.filter(el => el.firstChild.classList.contains('bff_error') || el.firstChild.classList.contains('bff_warning'));
+
+    for (let el of htmlEl) {
+        el.firstChild.classList.remove('bff_error');
+        el.firstChild.classList.remove('bff_success');
+        el.firstChild.classList.remove('bff_warning');
+        el.firstChild.classList.add('bff_loading');
+        el.firstChild.innerText = 'loading';
     }
 
-    let htmlEl = Array.from(document.getElementsByClassName('z-list'));
     let elements = htmlEl.map(el => utf8_to_b64(el.innerHTML));
     let communityEl = document.getElementById('gui_table1i')?.innerHTML;
 
@@ -131,11 +140,15 @@ function sendStories(spans, communityId) {
 
 function updateIndicators(spans, stories, communityId) {
     for (const span of spans) {
+        if (span.classList.contains('bff_success')) {
+            continue;
+        }
+
         let story = stories.find(el => el.id == span.id.split('_')[2]);
 
         let status = 'not_registered';
         if (story) {
-            if (new Date(story.time).getTime() >= span.getAttribute('time')) {
+            if (Number.parseInt(story.time)>= span.getAttribute('time')) {
                 status = 'loaded'
             } else {
                 status = 'outdated'
@@ -365,7 +378,7 @@ function appendDarkMode() {
             background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
         }
     `);
-} 
+}
 function appendOverlay() {
     let overlay = document.createElement("div");
     overlay.innerHTML = `

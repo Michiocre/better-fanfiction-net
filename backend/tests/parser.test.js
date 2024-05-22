@@ -41,8 +41,8 @@ test('parser parseSearchDivData', () => {
         reviews: 24,
         favs: 4,
         follows: 3,
-        updated: new Date(989132400 * 1000),
-        published: new Date(988527600 * 1000),
+        updated: 989132400,
+        published: 988527600,
         characters: ['Draco M.', 'Harry P.'],
         pairings: [],
         completed: false,
@@ -63,8 +63,8 @@ test('parser parseSearchDivData', () => {
         reviews: 18615,
         favs: 37499,
         follows: 19755,
-        updated: new Date(1578190357 * 1000),
-        published: new Date(1283431425 * 1000),
+        updated: 1578190357,
+        published: 1283431425,
         characters: ['Hermione G.', 'Draco M.'],
         pairings: [],
         completed: true,
@@ -85,8 +85,8 @@ test('parser parseSearchDivData', () => {
         reviews: 0,
         favs: 0,
         follows: 0,
-        updated: undefined,
-        published: new Date(1678461818 * 1000),
+        updated: 0,
+        published: 1678461818,
         characters: ['Voldemort'],
         pairings: [['Harry P.', 'OC']],
         completed: false,
@@ -107,8 +107,8 @@ test('parser parseSearchDivData', () => {
         reviews: 0,
         favs: 0,
         follows: 0,
-        updated: undefined,
-        published: new Date(1689099337 * 1000),
+        updated: 0,
+        published: 1689099337,
         characters: ['Alina S.', 'Rhaenyra T.'],
         pairings: [],
         completed: true,
@@ -129,8 +129,8 @@ test('parser parseSearchDivData', () => {
         reviews: 1,
         favs: 3,
         follows: 2,
-        updated: undefined,
-        published: new Date(1689172472 * 1000),
+        updated: 0,
+        published: 1689172472,
         characters: ['Marinette D-C./Ladybug', 'Adrien A./Cat Noir', 'Alya C./Lady Wifi/Rena Rouge', 'Zoé Lee/Vesperia'],
         pairings: [],
         completed: false,
@@ -151,8 +151,8 @@ test('parser parseSearchDivData', () => {
         reviews: 49,
         favs: 77,
         follows: 60,
-        updated: new Date(1529171293 * 1000),
-        published: new Date(1342375764 * 1000),
+        updated: 1529171293,
+        published: 1342375764,
         characters: ['Duel Monster', 'Stocking A.'],
         pairings: [],
         completed: false,
@@ -181,7 +181,7 @@ test('parser parseCommunityDiv', () => {
         },
         staff: [],
         fandom: 'Harry Potter',
-        start_date: new Date('08-14-10'),
+        start_date: '08-14-10',
         story_count: 1867,
         follower: 5735,
         description: 'The best stories from the best fanfiction community. Sic semper tyrannis.'
@@ -222,7 +222,7 @@ test('parser parseCommunityDiv', () => {
             { id: 756958, name: 'sparkley-tangerine' }
           ],
         fandom: 'Harry Potter',
-        start_date: new Date('02-14-05'),
+        start_date: '02-14-05',
         story_count: 689,
         follower: 1943,
         description: `Have you ever searched and searched for Harry and Draco slash but you've never found the right one to read that has you feeling like your a part of it. Well look no further than here because if you click this you will get access to the BEST HD SLASH out there. So Click, Subscribe and HAPPY reading. I am NOT accepting anymore staff members. Thanks!`
@@ -230,10 +230,10 @@ test('parser parseCommunityDiv', () => {
 });
 
 test('parser parseSearchPage', () => {
-    expect(parser.parseSearchPage('https://www.fanfiction.net/book/Harry-Potter/', '', [
+    expect(parser.parseSearchPage('https://www.fanfiction.net/book/Harry-Potter/', [
         `<span class="bff_span bff_error">not registered</span><a class="stitle" href="/s/13476426/1/The-Inner-Eye"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/6038841/75/" data-original="/image/6038841/75/" width="50" height="66">The Inner Eye</a> <a href="/s/13476426/6/The-Inner-Eye"><span class="icon-chevron-right xicon-section-arrow"></span></a> by <a href="/u/12901889/Bluurr">Bluurr</a> <a class="reviews" href="/r/13476426/">reviews</a>
         <div class="z-indent z-padtop">AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry<div class="z-padtop2 xgray">Rated: T - English - Family/Adventure - Chapters: 6 - Words: 12,368 - Reviews: 23 - Favs: 110 - Follows: 167 - Updated: <span data-xutime="1712589654">16m ago</span> - Published: <span data-xutime="1578845283">Jan 12, 2020</span> - [Petunia D., OC] Harry P.</div></div>`
-    ])).toStrictEqual([{
+    ], 'Harry-Potter', '', '')).toStrictEqual([{
         author: {id: 12901889, name: "Bluurr"},
         chapters: 6,
         characters: ["Harry P."],
@@ -249,11 +249,11 @@ test('parser parseSearchPage', () => {
         image: "/image/6038841/75/",
         language: "English",
         pairings: [["Petunia D.", "OC"]],
-        published: new Date(1578845283 * 1000),
+        published: 1578845283,
         rated: "T", 
         reviews: 23, 
         title: "The Inner Eye", 
-        updated: new Date(1712589654 * 1000), 
+        updated: 1712589654, 
         words: 12368, 
         xfandom: null
     }]);
@@ -283,8 +283,8 @@ test('parser parseUserPage', () => {
         reviews: 0,
         favs: 0,
         follows: 1,
-        updated: undefined,
-        published: new Date(1578593189 * 1000),
+        updated: 0,
+        published: 1578593189,
         characters: [],
         pairings: [],
         completed: true,
@@ -292,3 +292,32 @@ test('parser parseUserPage', () => {
     }]);
 });
 
+test('parser parseSearchPage', () => {
+    expect(parser.parseSearchPage('https://www.fanfiction.net/j/0/3/0/', [
+        `<span id="bff_span_14357894" class="bff_span bff_success" time="1716258296">up to date</span><a class="stitle" href="/s/14357894/1/Devil-of-the-Iron-Flower"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/7301701/75/" data-original="/image/7301701/75/" width="50" height="66">Devil of the Iron Flower</a> by <a href="/u/16153326/Just-a-guy-with-a-keyboard">Just a guy with a keyboard</a> <a class="reviews" href="/r/14357894/">reviews</a>
+        <div class="z-indent z-padtop">this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by "Azure Dragon of the East" this will be further explained in what would be the first chapter of the story<div class="z-padtop2 xgray">Crossover - Infinite Stratos/IS&lt;インフィニット・ストラトス&gt; &amp; Mobile Suit Gundam: Iron-Blooded Orphans - Rated: T - English - Sci-Fi/Romance - Chapters: 1 - Words: 216 - Reviews: 4 - Favs: 3 - Follows: 3 - Published: <span data-xutime="1716258296">May 21</span></div></div>`
+    ], '', '', '')).toStrictEqual([{
+        author: {id: 16153326, name: "Just a guy with a keyboard"},
+        chapters: 1,
+        characters: [],
+        community: null,
+        completed: false,
+        description: "this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by \"Azure Dragon of the East\" this will be further explained in what would be the first chapter of the story",
+        fandom: "Infinite Stratos/IS&lt;インフィニット・ストラトス&gt;",
+        favs: 3,
+        follows: 3,
+        genreA: "Sci-Fi",
+        genreB: "Romance",
+        id: 14357894,
+        image: "/image/7301701/75/",
+        language: "English",
+        pairings: [],
+        published: 1716258296,
+        rated: "T", 
+        reviews: 4, 
+        title: "Devil of the Iron Flower", 
+        updated: 0, 
+        words: 216, 
+        xfandom: "Mobile Suit Gundam: Iron-Blooded Orphans"
+    }]);
+});

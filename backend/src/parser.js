@@ -55,7 +55,7 @@ function parseSearchDivData(content) {
         description.shift();
         description = description.join('>');
 
-        let pattern = RegExp(/^.*?>(?:(?:Crossover - ([^\n&]+) &amp; ([^\n]+) - )|([^\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
+        let pattern = RegExp(/^.*?>(?:(?:Crossover - ([^\n]+?) &amp; ([^\n]+) - )|([^\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
         let data = pattern.exec(subLines[2]);
 
         let completed = false;
@@ -109,8 +109,8 @@ function parseSearchDivData(content) {
             reviews: parseNumber(data[9]),
             favs: parseNumber(data[10]),
             follows: parseNumber(data[11]),
-            updated: parseDate(data[12]),
-            published: parseDate(data[13]),
+            updated: parseNumber(data[12]),
+            published: parseNumber(data[13]),
             pairings: pairings || [],
             characters: characters || [],
             completed   
@@ -176,7 +176,7 @@ function parseCommunityDiv(content) {
         },
         staff: staff,
         fandom: data[1],
-        start_date: new Date(data[2]),
+        start_date: data[2],
         story_count: parseNumber(data[5]),
         follower: parseNumber(data[6]),
         description: data[9]
