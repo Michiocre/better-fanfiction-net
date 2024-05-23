@@ -1,35 +1,36 @@
 const parser = require('../src/parser');
+const expect = require('expect.js');
 
-test('parser parseNumber', () => {
-    expect(parser.parseNumber('10')).toBe(10);
-    expect(parser.parseNumber('-10')).toBe(-10);
-    expect(parser.parseNumber('1,000')).toBe(1000);
-    expect(parser.parseNumber('10.50')).toBe(10);
-    expect(parser.parseNumber(10)).toBe(10);
+describe('parser parseNumber', () => {
+    expect(parser.parseNumber('10')).to.be(10);
+    expect(parser.parseNumber('-10')).to.be(-10);
+    expect(parser.parseNumber('1,000')).to.be(1000);
+    expect(parser.parseNumber('10.50')).to.be(10);
+    expect(parser.parseNumber(10)).to.be(10);
 });
 
-test('parser parseDate', () => {
-    expect(parser.parseDate(0)).toStrictEqual(new Date(0));
+describe('parser parseDate', () => {
+    expect(parser.parseDate(0)).to.eql(new Date(0));
     let currentUnix = new Date().getTime();
-    expect(parser.parseDate(currentUnix / 1000)).toStrictEqual(new Date(currentUnix));
-    expect(parser.parseDate(undefined)).toBe(undefined);
+    expect(parser.parseDate(currentUnix / 1000)).to.eql(new Date(currentUnix));
+    expect(parser.parseDate(undefined)).to.be(undefined);
 });
 
-test('parser parseChars', () => {
-    expect(parser.parseChars(``)).toStrictEqual([[],[]]);
-    expect(parser.parseChars(`Hermione G.`)).toStrictEqual([[], ['Hermione G.']]);
-    expect(parser.parseChars(`Harry P., Hermione G.`)).toStrictEqual([[], ['Harry P.', 'Hermione G.']]);
-    expect(parser.parseChars(`[Harry P., Hermione G.]`)).toStrictEqual([[['Harry P.', 'Hermione G.']], []]);
-    expect(parser.parseChars(`[Harry P., Hermione G., Fleur D., N. Tonks]`)).toStrictEqual([[['Harry P.', 'Hermione G.', 'Fleur D.', 'N. Tonks']], []]);
-    expect(parser.parseChars(`[Hermione G., Draco M.] Sirius B., Regulus B.`)).toStrictEqual([[['Hermione G.', 'Draco M.']], ['Sirius B.', 'Regulus B.']]);
-    expect(parser.parseChars(`[Severus S., Sirius B.] [Lily Evans P., James P.]`)).toStrictEqual([[['Severus S.', 'Sirius B.'], ['Lily Evans P.', 'James P.']], []]);
-    expect(() => parser.parseChars(`Harry P., Hermione G. [Hermione G., Draco M.]`)).toThrow('Can`t parse characters');
+describe('parser parseChars', () => {
+    expect(parser.parseChars(``)).to.eql([[],[]]);
+    expect(parser.parseChars(`Hermione G.`)).to.eql([[], ['Hermione G.']]);
+    expect(parser.parseChars(`Harry P., Hermione G.`)).to.eql([[], ['Harry P.', 'Hermione G.']]);
+    expect(parser.parseChars(`[Harry P., Hermione G.]`)).to.eql([[['Harry P.', 'Hermione G.']], []]);
+    expect(parser.parseChars(`[Harry P., Hermione G., Fleur D., N. Tonks]`)).to.eql([[['Harry P.', 'Hermione G.', 'Fleur D.', 'N. Tonks']], []]);
+    expect(parser.parseChars(`[Hermione G., Draco M.] Sirius B., Regulus B.`)).to.eql([[['Hermione G.', 'Draco M.']], ['Sirius B.', 'Regulus B.']]);
+    expect(parser.parseChars(`[Severus S., Sirius B.] [Lily Evans P., James P.]`)).to.eql([[['Severus S.', 'Sirius B.'], ['Lily Evans P.', 'James P.']], []]);
+    expect(() => parser.parseChars(`Harry P., Hermione G. [Hermione G., Draco M.]`)).to.throwException('Can`t parse characters');
 });
 
-test('parser parseSearchDivData', () => {
+describe('parser parseSearchDivData', () => {
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">Description<div class="z-padtop2 xgray">Har-ry Potter - Rated: K+ - English - Angst/Romance - Chapters: 4 - Words: 4,669 - Reviews: 24 - Favs: 4 - Follows: 3 - Updated: <span data-xutime="989132400">May 6, 2001</span> - Published: <span data-xutime="988527600">Apr 29, 2001</span> - Draco M., Harry P.</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: 'Har-ry Potter',
         xfandom: null,
         rated: 'K+',
@@ -51,7 +52,7 @@ test('parser parseSearchDivData', () => {
 
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">Description<div class="z-padtop2 xgray">Rated: M - English - Romance/Angst - Chapters: 49 - Words: 284,050 - Reviews: 18615 - Favs: 37,499 - Follows: 19,755 - Updated: <span data-xutime="1578190357">Jan 5, 2020</span> - Published: <span data-xutime="1283431425">Sep 2, 2010</span> - Hermione G., Draco M. - Complete</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: undefined,
         xfandom: null,
         rated: 'M',
@@ -73,7 +74,7 @@ test('parser parseSearchDivData', () => {
 
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">Description<div class="z-padtop2 xgray">Rated: M - Spanish - Hurt/Comfort/Romance - Chapters: 1 - Words: 2,918 - Published: <span data-xutime="1678461818">1h ago</span> - [Harry P., OC] Voldemort</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: undefined,
         xfandom: null,
         rated: 'M',
@@ -95,7 +96,7 @@ test('parser parseSearchDivData', () => {
     
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">At the end of the war, Alina travels the world.<div class="z-padtop2 xgray">Crossover - Shadow and Bone &amp; House of the Dragon - Rated: T - English - Adventure/Friendship - Chapters: 1 - Words: 1,709 - Published: <span data-xutime="1689099337">6h ago</span> - Alina S., Rhaenyra T. - Complete</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: 'Shadow and Bone',
         xfandom: 'House of the Dragon',
         rated: 'T',
@@ -117,7 +118,7 @@ test('parser parseSearchDivData', () => {
 
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">After defeating both Gabriel and Lila, the miraculous team finally recovers the butterfly miraculous and live their life in peace while still protecting the city. But when new jewls emerge from the shadows, the mischievous, the team of heroes will have to unite once again to defeat the treat. Will the world be safe from the rising menace or will it fall into the darkness ?<div class="z-padtop2 xgray">Miraculous: Tales of Ladybug &amp; Cat Noir - Rated: T - English - Chapters: 1 - Words: 1,742 - Reviews: 1 - Favs: 3 - Follows: 2 - Published: <span data-xutime="1689172472">6h ago</span> - Marinette D-C./Ladybug, Adrien A./Cat Noir, Alya C./Lady Wifi/Rena Rouge, Zoé Lee/Vesperia</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: 'Miraculous: Tales of Ladybug &amp; Cat Noir',
         xfandom: null,
         rated: 'T',
@@ -139,7 +140,7 @@ test('parser parseSearchDivData', () => {
 
     expect(
         parser.parseSearchDivData(`<div class="z-indent z-padtop">Rated T for swearing and perverted suggestions. Stocking ran out of sweets, and on her quest to find some, she nearly gets into a car accident thanks to a very special card. As if to guide her onto a particular path, a card shop is near where she parks, and a certain Geek Boy is running the shop...<div class="z-padtop2 xgray">Crossover - Yu-Gi-Oh &amp; Panty &amp; Stocking with Garterbelt/パンティ＆ストッキングwithガーターベルト - Rated: T - English - Friendship/Adventure - Chapters: 8 - Words: 35,599 - Reviews: 49 - Favs: 77 - Follows: 60 - Updated: <span data-xutime="1529171293">Jun 16, 2018</span> - Published: <span data-xutime="1342375764">Jul 15, 2012</span> - Duel Monster, Stocking A.</div></div>`)
-    ).toStrictEqual({
+    ).to.eql({
         fandom: 'Yu-Gi-Oh',
         xfandom: 'Panty &amp; Stocking with Garterbelt/パンティ＆ストッキングwithガーターベルト',
         rated: 'T',
@@ -160,7 +161,7 @@ test('parser parseSearchDivData', () => {
     });
 });
 
-test('parser parseCommunityDiv', () => {
+describe('parser parseCommunityDiv', () => {
     expect(
         parser.parseCommunityDiv(`
             <tbody><tr>
@@ -173,7 +174,7 @@ test('parser parseCommunityDiv', () => {
             </tr>
             </tbody>`
         )
-    ).toStrictEqual({
+    ).to.eql({
         id: 84507,
         author: {
             id: 980211,
@@ -199,7 +200,7 @@ test('parser parseCommunityDiv', () => {
             </tr>
             </tbody>`
         )
-    ).toStrictEqual({
+    ).to.eql({
         id: 11605,
         author: {
             id: 652101,
@@ -229,11 +230,11 @@ test('parser parseCommunityDiv', () => {
     });
 });
 
-test('parser parseSearchPage', () => {
+describe('parser parseSearchPage', () => {
     expect(parser.parseSearchPage('https://www.fanfiction.net/book/Harry-Potter/', [
         `<span class="bff_span bff_error">not registered</span><a class="stitle" href="/s/13476426/1/The-Inner-Eye"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/6038841/75/" data-original="/image/6038841/75/" width="50" height="66">The Inner Eye</a> <a href="/s/13476426/6/The-Inner-Eye"><span class="icon-chevron-right xicon-section-arrow"></span></a> by <a href="/u/12901889/Bluurr">Bluurr</a> <a class="reviews" href="/r/13476426/">reviews</a>
         <div class="z-indent z-padtop">AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry<div class="z-padtop2 xgray">Rated: T - English - Family/Adventure - Chapters: 6 - Words: 12,368 - Reviews: 23 - Favs: 110 - Follows: 167 - Updated: <span data-xutime="1712589654">16m ago</span> - Published: <span data-xutime="1578845283">Jan 12, 2020</span> - [Petunia D., OC] Harry P.</div></div>`
-    ], 'Harry-Potter', '', '')).toStrictEqual([{
+    ], 'Harry-Potter', '', '')).to.eql([{
         author: {id: 12901889, name: "Bluurr"},
         chapters: 6,
         characters: ["Harry P."],
@@ -259,12 +260,12 @@ test('parser parseSearchPage', () => {
     }]);
 });
 
-test('parser parseUserPage', () => {
+describe('parser parseUserPage', () => {
     expect(parser.parseUserPage('https://www.fanfiction.net/u/5503799/Paersephone', [
         `<span class="bff_span bff_success">up to date</span><a class="stitle" href="/s/13474353/1/Drabbles-OS-and-passing-thoughts"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/5920357/75/" data-original="/image/5920357/75/" width="50" height="66">Drabbles, OS, and passing thoughts</a> <a href="/s/13474353/2/Drabbles-OS-and-passing-thoughts"><span class="icon-chevron-right xicon-section-arrow"></span></a>
         <div class="z-indent z-padtop">Multiple pairings and sometimes no pairings at all. I just want to have a kind of masterfic where everything can be stored, so it doesn't get too crowded on my profile yet. All HP-related, some AU, some canon. FIRST FOR NOW : Someone Who Cares. Neville doesn't feel so well after discovering who exactly was usurpating Moody's identity.<div class="z-padtop2 xgray">Harry Potter - Rated: T - English - Chapters: 2 - Words: 1,068 - Follows: 1 - Published: <span data-xutime="1578593189">Jan 9, 2020</span> - Complete</div></div>
         `])
-    ).toStrictEqual([{
+    ).to.eql([{
         id: 13474353,
         title: 'Drabbles, OS, and passing thoughts',
         image: "/image/5920357/75/",
@@ -292,11 +293,11 @@ test('parser parseUserPage', () => {
     }]);
 });
 
-test('parser parseSearchPage', () => {
+describe('parser parseSearchPage', () => {
     expect(parser.parseSearchPage('https://www.fanfiction.net/j/0/3/0/', [
         `<span id="bff_span_14357894" class="bff_span bff_success" time="1716258296">up to date</span><a class="stitle" href="/s/14357894/1/Devil-of-the-Iron-Flower"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/7301701/75/" data-original="/image/7301701/75/" width="50" height="66">Devil of the Iron Flower</a> by <a href="/u/16153326/Just-a-guy-with-a-keyboard">Just a guy with a keyboard</a> <a class="reviews" href="/r/14357894/">reviews</a>
         <div class="z-indent z-padtop">this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by "Azure Dragon of the East" this will be further explained in what would be the first chapter of the story<div class="z-padtop2 xgray">Crossover - Infinite Stratos/IS&lt;インフィニット・ストラトス&gt; &amp; Mobile Suit Gundam: Iron-Blooded Orphans - Rated: T - English - Sci-Fi/Romance - Chapters: 1 - Words: 216 - Reviews: 4 - Favs: 3 - Follows: 3 - Published: <span data-xutime="1716258296">May 21</span></div></div>`
-    ], '', '', '')).toStrictEqual([{
+    ], '', '', '')).to.eql([{
         author: {id: 16153326, name: "Just a guy with a keyboard"},
         chapters: 1,
         characters: [],
