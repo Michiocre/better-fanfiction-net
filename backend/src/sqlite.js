@@ -68,12 +68,7 @@ let db;
         throw Error('Database connection has not been established')  
     }
 
-    let fandom;
-    if (typeof community.fandom == 'number') {
-        fandom = {id: community.fandom};
-    } else {
-        fandom =  getFandomByName(community.fandom);
-    }
+    let fandom = typeof community.fandom == 'number' ? fandom : getFandomByName(community.fandom);
 
     if (!fandom) {
         utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
@@ -160,19 +155,8 @@ let db;
     
     const storyTransaction = db.transaction( (story) => {
         try {
-            let fandom; 
-            if (typeof story.fandom == 'number') {
-                fandom = {id: story.fandom};
-            } else {
-                fandom = getFandomByName(story.fandom, story.xfandom);
-            }
-
-            let xfandom; 
-            if (typeof story.xfandom == 'number') {
-                xfandom = {id: story.xfandom};
-            } else {
-                xfandom = getFandomByName(story.xfandom);
-            }
+            let fandom = typeof story.fandom == 'number' ? fandom : getFandomByName(story.fandom, story.xfandom);
+            let xfandom = typeof story.xfandom == 'number' ? xfandom : getFandomByName(story.xfandom);
 
             if (!fandom) {
                 utils.warn('Could not find fandom, maybe try running getFandoms again: ', {name: story.fandom});
