@@ -87,6 +87,15 @@ async function main() {
         res.send(await db.getFandomsByCategory(req.params.category));
     });
 
+    app.post('/stories', async (req, res) => {
+        let params = req.body;
+        if (params.limit < 1 || params.limit > 100) {
+            return res.status(400).send("The limit has to be between 1 and 100 (inclusive)");
+        }
+
+        res.status(200).send(await db.getStories(params));
+    });
+
     app.post('/stories/status', async (req, res) => {
         let ids = req.body.ids;
         let stories = [];
@@ -102,6 +111,10 @@ async function main() {
             }
         }
         res.status(200).send(stories);
+    });
+
+    app.get('/characters/:fandomId', async (req, res) => {
+        res.send(await db.getCharactersByFandomId(req.params.fandomId));
     });
     
     app.listen(port, () => {

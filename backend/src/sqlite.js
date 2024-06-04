@@ -68,7 +68,7 @@ let db;
         throw Error('Database connection has not been established')  
     }
 
-    let fandom = typeof community.fandom == 'number' ? fandom : getFandomByName(community.fandom);
+    let fandom = typeof community.fandom == 'number' ? {id: community.fandom} : getFandomByName(community.fandom);
 
     if (!fandom) {
         utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
@@ -155,8 +155,8 @@ let db;
     
     const storyTransaction = db.transaction( (story) => {
         try {
-            let fandom = typeof story.fandom == 'number' ? fandom : getFandomByName(story.fandom, story.xfandom);
-            let xfandom = typeof story.xfandom == 'number' ? xfandom : getFandomByName(story.xfandom);
+            let fandom = typeof story.fandom == 'number' ? {id: story.fandom} : getFandomByName(story.fandom, story.xfandom);
+            let xfandom = typeof story.xfandom == 'number' ? {id: story.xfandom} : getFandomByName(story.xfandom);
 
             if (!fandom) {
                 utils.warn('Could not find fandom, maybe try running getFandoms again: ', {name: story.fandom});
@@ -274,6 +274,19 @@ let db;
     return stmt.get(id);
 }
 
+function getStories(params) {
+    if (!db) {
+        throw Error('Database connection has not been established')  
+    }
+
+    const stmt = db.prepare("SELECT * FROM `story` WHERE title LIKE $title LIMIT $limit OFFSET $page");
+    return stmt.all({
+        limit: params.limit ?? 100,
+        page: params.offset ?? 0,
+        title: params.title ?? ''
+    });
+}
+
  function getCommunitiesByStoryId(storyId) {
     if (!db) {
         throw Error('Database connection has not been established')  
@@ -340,5 +353,6 @@ module.exports = {
     getFandomsByCategory,
     getStoryById,
     getCommunitiesByStoryId,
-    getFandomCount
+    getFandomCount,
+    getStories
 }
