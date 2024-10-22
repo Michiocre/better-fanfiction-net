@@ -22,11 +22,9 @@ CREATE TABLE IF NOT EXISTS character (
 
 CREATE TABLE IF NOT EXISTS story (
     id INTEGER NOT NULL,
-    title TEXT NOT NULL,
     author_id INTEGER NOT NULL,
     fandom_id INTEGER NOT NULL,
     xfandom_id INTEGER,
-    description TEXT NOT NULL,
     rating TEXT NOT NULL,
     chapters INTEGER NOT NULL,
     words INTEGER NOT NULL,
@@ -43,6 +41,8 @@ CREATE TABLE IF NOT EXISTS story (
     FOREIGN KEY (fandom_id) REFERENCES fandom(id),
     FOREIGN KEY (xfandom_id) REFERENCES fandom(id)
 );
+
+CREATE VIRTUAL TABLE IF NOT EXISTS story_texts USING fts5(id, title, description);
 
 CREATE TABLE IF NOT EXISTS story_fandom (
     story_id INTEGER NOT NULL,

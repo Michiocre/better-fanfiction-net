@@ -5,7 +5,7 @@ const fs = require('fs');
 
 let db;
 
- function init(filename) {
+function init(filename) {
     try {
         let dbPath = path.resolve(__dirname, '../..', filename);
         db = sqlite3(dbPath);
@@ -169,8 +169,11 @@ let db;
 
              saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
 
-            const insert = db.prepare('INSERT OR REPLACE INTO story (id, title, author_id, fandom_id, xfandom_id, description, rating, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            insert.run(story.id, story.title, story.author.id, fandom.id, xfandom?.id, story.description, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB);
+            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB);
+            
+            const insertTexts = db.prepare('INSERT OR REPLACE INTO story_texts (id, title, description) VALUES(?, ?, ?)')
+            insertTexts.run(story.id, story.title, story.description);
 
             let characters = [];
             for (let char of story.characters) {
@@ -270,7 +273,7 @@ let db;
         throw Error('Database connection has not been established')  
     }
     
-    const stmt = db.prepare('SELECT * FROM `story` WHERE `id` = ?');
+    const stmt = db.prepare('SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE `id` = ?');
     return stmt.get(id);
 }
 
@@ -279,7 +282,7 @@ function getStories(params) {
         throw Error('Database connection has not been established')  
     }
 
-    const stmt = db.prepare("SELECT * FROM `story` WHERE title LIKE $title LIMIT $limit OFFSET $page");
+    const stmt = db.prepare("SELECT *, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE st.title MATCH $title LIMIT $limit OFFSET $page");
     return stmt.all({
         limit: params.limit ?? 100,
         page: params.offset ?? 0,
