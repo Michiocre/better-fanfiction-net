@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS story (
     FOREIGN KEY (xfandom_id) REFERENCES fandom(id)
 );
 
-CREATE VIRTUAL TABLE IF NOT EXISTS story_texts USING fts5(id, title, description);
+CREATE VIRTUAL TABLE IF NOT EXISTS story_texts USING fts5(id UNINDEXED, title, description);
 
 CREATE TABLE IF NOT EXISTS story_fandom (
     story_id INTEGER NOT NULL,

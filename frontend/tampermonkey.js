@@ -45,6 +45,10 @@ let settings = {
 
     appendOverlay()
 
+    if (window.location.pathname.startsWith('/forums')) {
+        return;
+    }
+
     let communityId = null;
     if (window.location.pathname.startsWith('/community')) {
         communityId = parseInt(window.location.pathname.split('/')[3]);
@@ -117,6 +121,9 @@ function sendStories(spans, communityId) {
 
     let elements = htmlEl.map(el => utf8_to_b64(el.innerHTML));
     let communityEl = document.getElementById('gui_table1i')?.innerHTML;
+    if (!communityEl) {
+        communityEl = document.getElementById('gui_table1')?.innerHTML;
+    }
 
     fetch(`${settings.url}/parser/page`, {
         method: "POST",

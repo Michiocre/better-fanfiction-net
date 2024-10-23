@@ -273,7 +273,7 @@ function init(filename) {
         throw Error('Database connection has not been established')  
     }
     
-    const stmt = db.prepare('SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE `id` = ?');
+    const stmt = db.prepare('SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE s.id = ?');
     return stmt.get(id);
 }
 

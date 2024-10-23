@@ -159,6 +159,32 @@ describe('parser parseSearchDivData', () => {
         completed: false,
         description: "Rated T for swearing and perverted suggestions. Stocking ran out of sweets, and on her quest to find some, she nearly gets into a car accident thanks to a very special card. As if to guide her onto a particular path, a card shop is near where she parks, and a certain Geek Boy is running the shop..."
     });
+
+    expect(
+        parser.parseSearchDivData(`<div class="z-indent z-padtop">well...it was going to be a drabble...no such luck.
+            For Ivory Novelist.
+            the death scene.<div class="z-padtop2 xgray">King Arthur - Rated: K+ - English - Angst/Fantasy - Chapters: 1 - Words: 1,239 - Reviews: 7 - Favs: 5 - Follows: 1 - Published: <span data-xutime="1091772486">Aug 6, 2004</span></div></div>`)
+    ).to.eql({
+        fandom: 'King Arthur',
+        xfandom: null,
+        rated: 'K+',
+        language: 'English',
+        genreA: 'Angst',
+        genreB: 'Drama',
+        chapters: 1,
+        words: 1239,
+        reviews: 7,
+        favs: 5,
+        follows: 1,
+        updated: 0,
+        published: 1091772486,
+        characters: [],
+        pairings: [],
+        completed: false,
+        description: `well...it was going to be a drabble...no such luck.
+            For Ivory Novelist.
+            the death scene.`
+    });
 });
 
 describe('parser parseCommunityDiv', () => {
@@ -227,6 +253,38 @@ describe('parser parseCommunityDiv', () => {
         story_count: 689,
         follower: 1943,
         description: `Have you ever searched and searched for Harry and Draco slash but you've never found the right one to read that has you feeling like your a part of it. Well look no further than here because if you click this you will get access to the BEST HD SLASH out there. So Click, Subscribe and HAPPY reading. I am NOT accepting anymore staff members. Thanks!`
+    });
+
+    expect(
+        parser.parseCommunityDiv(`
+            <tbody><tr>
+            <td valign="top"><img class="cimage " style="clear:left;float:left;margin-right:3px;padding:2px;border:1px solid #ccc;-moz-border-radius:2px;-webkit-border-radius:2px;" src="/image/1599097/75/" width="75" height="100"> <img src="//ff77.b-cdn.net/static/ficons/transmit_blue.png" width="16" height="16" border="0" align="absmiddle"> <a href="https://www.fanfiction.net/alert/community.php?action=add&amp;c2id=117072">Follow</a> . <a style="border:none;float:right" title="Feed" href="/atom/c2/117072/3/"><img src="//ff77.b-cdn.net/static/forum/feed.png" width="16" height="16" border="0" align="absmiddle"></a>
+            <hr size="1" noshade="">
+            <div>Focus: General <span class="icon-chevron-right xicon-section-arrow"></span> All Categories, Since: 10-27-14</div>
+            <div>Founder: <a href="/u/4643583/Yellow-Horse">Yellow Horse</a> - Stories: 11,887 - Followers: 2,684 - Staff: <a href="#" onclick="$('#staff').toggle();">5</a> - id: 117072
+            </div><div id="staff" style="display:none;padding-left:100px;"><ol><li><a href="/u/3571363/GaleSynch">GaleSynch</a></li><li><a href="/u/1902231/Nee339">Nee339</a></li><li><a href="/u/9011291/RDK-Rana">RDK Rana</a></li><li><a href="/u/3827883/War-Sage">War Sage</a></li><li><a href="/u/5783496/ilovetanks">ilovetanks</a></li></ol></div>
+            <div>This community's purpose is to collect original character (OC) and self insert (SI) stories. These stories come from every fan fiction category and genre on this site. Please note that some of these stories do contain graphic descriptions of sex, violence, harsh language, reincarnation and other religious themes. Read at your own risk, and I hope you enjoy your time here at the Archive for SIs and OCs. Have a nice day.</div></td>
+            </tr>
+            </tbody>`
+        )
+    ).to.eql({
+        id: 117072,
+        author: {
+            id: 4643583,
+            name: 'Yellow Horse'
+        },
+        staff: [
+            { id: 3571363, name: 'GaleSynch' },
+            { id: 1902231, name: 'Nee339' },
+            { id: 9011291, name: 'RDK Rana' },
+            { id: 3827883, name: 'War Sage' },
+            { id: 5783496, name: 'ilovetanks' },
+          ],
+        fandom: 'All Categories',
+        start_date: '10-27-14',
+        story_count: 11887,
+        follower: 2684,
+        description: `This community's purpose is to collect original character (OC) and self insert (SI) stories. These stories come from every fan fiction category and genre on this site. Please note that some of these stories do contain graphic descriptions of sex, violence, harsh language, reincarnation and other religious themes. Read at your own risk, and I hope you enjoy your time here at the Archive for SIs and OCs. Have a nice day.`
     });
 });
 

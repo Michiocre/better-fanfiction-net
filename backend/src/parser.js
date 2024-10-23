@@ -142,9 +142,9 @@ function parseSearchDivHeader(content) {
 function parseSearchDiv(content) {
     let lines = content.split('\n');
 
-    let headerData = parseSearchDivHeader(lines[0]);
+    let headerData = parseSearchDivHeader(lines.shift());
 
-    let lowerData = parseSearchDivData(lines[1]);
+    let lowerData = parseSearchDivData(lines.join(' '));
     return {...headerData, ...lowerData};
 }
 
