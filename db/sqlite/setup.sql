@@ -91,5 +91,19 @@ CREATE TABLE IF NOT EXISTS community_author (
     FOREIGN KEY (author_id) REFERENCES author(id)
 );
 
+CREATE TABLE IF NOT EXISTS tag (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    tag_group TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS story_tag (
+    story_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (story_id, tag_id),
+    FOREIGN KEY (story_id) REFERENCES story(id),
+    FOREIGN KEY (tag_id) REFERENCES tag(id)    
+);
+
 
 INSERT OR IGNORE INTO fandom VALUES (0, 'All Categories', 'general');

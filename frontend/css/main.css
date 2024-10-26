@@ -1,0 +1,53 @@
+/* .adsbygoogle {
+    display: none !important;
+} */
+
+html {
+    background-color: #222222 !important;
+    overflow-x: hidden;
+}
+.bff {
+    position: relative;
+}
+.bff > span {
+    cursor: pointer;
+    margin-right: 10px;
+    content: "";
+    float: right;
+    max-width: 10px;
+    height: 15px;
+    border-radius: 15px;
+    padding: 3px 5px 2px 5px;
+    font-size: smaller;
+    color: transparent;
+    transition: max-width 0.2s, color 0.2s;
+    overflow: hidden;
+}
+.bff > span:hover {
+    max-width: 100px;
+    color: white;
+}
+.bff_loading {
+    background: lightgray;
+}
+.bff_success {
+    background: lightgreen;
+}
+.bff_warning {
+    background: sandybrown;
+}
+.bff_error {
+    background: lightcoral;
+}
+
+.bff_overlay {
+    background: white;
+    position: absolute;
+    top: 100px;
+    right: 0px;
+    z-index: 1000;
+}
+
+.bff_overlay.closed {
+    transform: translateX(100%);
+}

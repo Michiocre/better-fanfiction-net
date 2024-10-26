@@ -1,0 +1,48 @@
+body, select, textarea, input {
+    color: #e6edf3 !important;
+}
+
+body, .tcat, .btn {
+    background-color: #0d1117 !important;
+}
+
+.btn {
+    background-image: linear-gradient(to bottom,#010409,#0d1117);
+    color: #e6edf3 !important;
+    border: 1px solid #242a30 !important;
+    text-shadow: none !important;
+}
+
+a {
+    color: #4493f8 !important;
+}
+
+#name_login > a {
+    color: orange !important;
+}
+
+.caret {border-top-color: #e6edf3 !important;}
+
+.menulink, .menulink > a {
+    color: #e6edf3 !important;
+}
+
+.dropdown-menu > li > a:hover {color: #e6edf3 !important;}
+
+#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff_overlay   {
+    background-color: #010409 !important;
+    border-color: #242a30 !important;
+    box-shadow: none !important;
+}
+
+hr, .lc-left {
+    background: #242a30 !important;
+}
+
+#content_wrapper_inner, .tcat, .table-bordered, td {
+    border-color: #242a30 !important;
+}
+
+div > .zhover:hover {
+    background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
+}

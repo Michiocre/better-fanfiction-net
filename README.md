@@ -32,3 +32,7 @@ Install a extension like Tampermonkey on your webbrowser and add the `frontend/t
 To get initial data into the database login to your `fanfiction.net` account and navigate to `https://www.fanfiction.net/selectcategory.php?cat_s_id=1` (In your profile under Publish / New Story / Select Category).
 
 You should see a small colored indicator, by pressing it the database will track all the currently available fandoms.
+
+### Thanks
+
+(Dark Night Mode)[https://github.com/DarkNightMode/Dark-Night-Mode-Chrome-Extension/tree/master] for being a great darkmode tool, that helped me understand how to improve my own darkmode (no more white flash).

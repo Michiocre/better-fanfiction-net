@@ -1,0 +1,22 @@
+{
+    "manifest_version": 2,
+    "name": "Better fanfiction.net",
+    "version": "0.1",
+
+    "description": "Adds improved search function to fanfiction.net",
+    "web_accessible_resources": ["css/*.css"],
+
+    "content_scripts": [
+        {
+            "matches": ["*://*.fanfiction.net/*"],
+            "js": ["js/main.js"],
+            "css": ["css/main.css"],
+            "run_at": "document_start"
+        },
+        {
+            "matches": ["*://*.fanfiction.net/*"],
+            "js": ["js/base.js"],
+            "run_at": "document_end"
+        }
+    ]
+}
