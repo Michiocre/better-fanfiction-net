@@ -97,17 +97,20 @@ async function main() {
     });
 
     app.post('/stories/status', async (req, res) => {
+        console.log(req.body);
         let ids = req.body.ids;
         let stories = [];
-        for (const id of ids) {
-            let story = await db.getStoryById(id);
-            if (story) {
-                let communities = await db.getCommunitiesByStoryId(id);
-                stories.push({
-                    id: story.id,
-                    time: !story.updated ? story.published: story.updated,
-                    communities: communities?.map(el => ({id: el.id}))
-                });
+        if (ids) {
+            for (const id of ids) {
+                let story = await db.getStoryById(id);
+                if (story) {
+                    let communities = await db.getCommunitiesByStoryId(id);
+                    stories.push({
+                        id: story.id,
+                        time: !story.updated ? story.published: story.updated,
+                        communities: communities?.map(el => ({id: el.id}))
+                    });
+                }
             }
         }
         res.status(200).send(stories);

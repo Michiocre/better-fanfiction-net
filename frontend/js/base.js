@@ -267,13 +267,19 @@ let main = function() {
         spans.push(newEl);
     }
 
+    console.log('Sending request: ', `${settings.url}/stories/status`, storyIds)
     fetch(`${settings.url}/stories/status`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
         },
         body: JSON.stringify({ids: storyIds})
-    }).then(res => res.json()).then(val => {
+    }).then(async res => {
+        if (res.body) {
+            return res.json();   
+        }
+        return [];
+    }).then(val => {
         updateIndicators(spans, val, communityId);
         if (settings.autoLoad) {
             let els = document.getElementsByClassName('bff_error');

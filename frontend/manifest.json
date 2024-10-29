@@ -18,5 +18,6 @@
             "js": ["js/base.js"],
             "run_at": "document_end"
         }
-    ]
+    ],
+    "permissions": ["http://localhost/*", "webRequests"]
 }

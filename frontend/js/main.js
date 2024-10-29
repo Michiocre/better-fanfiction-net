@@ -2,7 +2,8 @@ let settings = {
     autoLoad: false,
     url: 'http://localhost:8888',
     overlayOpen: false,
-    darkMode: false
+    darkMode: false,
+    tagGroups: ['general', 'generated', 'author', 'personal']
 };
 
 const loadedSettings = localStorage.getItem("betterff");
