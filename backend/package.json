@@ -7,7 +7,7 @@
     "start": "node server.js",
     "frontend": "web-ext run --source-dir ../frontend",
     "dev": "nodemon --ignore test/ server.js",
-    "test": "mocha"
+    "test": "mocha && web-ext lint --source-dir ../frontend"
   },
   "repository": {
     "type": "git",

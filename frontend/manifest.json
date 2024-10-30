@@ -9,15 +9,15 @@
     "content_scripts": [
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/main.js"],
+            "js": ["js/preload.js"],
             "css": ["css/main.css"],
             "run_at": "document_start"
         },
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/base.js"],
+            "js": ["js/frontend.js"],
             "run_at": "document_end"
         }
     ],
-    "permissions": ["http://localhost/*", "webRequests"]
+    "permissions": ["http://localhost/*"]
 }

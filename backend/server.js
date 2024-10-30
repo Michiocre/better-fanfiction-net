@@ -97,7 +97,6 @@ async function main() {
     });
 
     app.post('/stories/status', async (req, res) => {
-        console.log(req.body);
         let ids = req.body.ids;
         let stories = [];
         if (ids) {

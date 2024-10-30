@@ -12,26 +12,26 @@ function initLogging() {
 
 function log(...args) {
     console.log(...args);
-    write(...args);
+    write('log', ...args);
 }
 
 function info(...args) {
     console.info(...args);
-    write(...args);
+    write('info', ...args);
 }
 
 function warn(...args) {
     console.warn(...args);
-    write(...args);
+    write('warn', ...args);
 }
 
 function error(...args) {
     console.error(...args);
-    write(...args);
+    write('error', ...args);
 }
 
-function write(...args) {
-    let message = `[${new Date().toUTCString()}]`;
+function write(type, ...args) {
+    let message = `[${new Date().toUTCString()}] [${type}]`;
     for (let arg of args) {
         if (arg?.toString() == '[object Object]') {
             arg = JSON.stringify(arg);

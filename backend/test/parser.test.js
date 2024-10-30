@@ -165,12 +165,15 @@ describe('parser parseSearchDivData', () => {
             For Ivory Novelist.
             the death scene.<div class="z-padtop2 xgray">King Arthur - Rated: K+ - English - Angst/Fantasy - Chapters: 1 - Words: 1,239 - Reviews: 7 - Favs: 5 - Follows: 1 - Published: <span data-xutime="1091772486">Aug 6, 2004</span></div></div>`)
     ).to.eql({
+        description: 'well...it was going to be a drabble...no such luck.\n' +
+        '            For Ivory Novelist.\n' +
+        '            the death scene.',
         fandom: 'King Arthur',
         xfandom: null,
         rated: 'K+',
         language: 'English',
         genreA: 'Angst',
-        genreB: 'Drama',
+        genreB: 'Fantasy',
         chapters: 1,
         words: 1239,
         reviews: 7,
@@ -180,10 +183,7 @@ describe('parser parseSearchDivData', () => {
         published: 1091772486,
         characters: [],
         pairings: [],
-        completed: false,
-        description: `well...it was going to be a drabble...no such luck.
-            For Ivory Novelist.
-            the death scene.`
+        completed: false
     });
 });
 

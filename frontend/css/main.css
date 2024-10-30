@@ -42,8 +42,8 @@ html {
 
 .bff_overlay {
     background: white;
-    position: absolute;
-    top: 100px;
+    position: fixed;
+    top: 32px;
     right: 0px;
     z-index: 1000;
 }

@@ -184,7 +184,7 @@ function appendOverlay() {
                 <tbody>
                     <tr>
                         <td style="border-left: none;">Backend Url</td>
-                        <td><input class="span2" name="url" id="backend-url" type="text" value="${settings.url}" title="BackendUrl"></td>
+                        <td><input class="span3" type="text" name="url" id="bff-backend-url" value="${settings.url}" title="BackendUrl"></td>
                     </tr>
                     <tr>
                         <td style="border-left: none;">Autoload</td>
@@ -193,6 +193,10 @@ function appendOverlay() {
                     <tr>
                         <td style="border-left: none;">Darkmode</td>
                         <td><input onclick="" type="checkbox" name="darkMode" value="1" ${settings.darkMode?'checked':''}></td>
+                    </tr>
+                    <tr>
+                        <td style="border-left: none;">Tag Groups</td>
+                        <td><textarea class="input-block-level" rows=3 name="tagGroups" id="bff-tagGroups" title="BackendUrl">${settings.tagGroups.join(', ')}</textarea></td>
                     </tr>
                 </tbody>
             </table>
@@ -211,6 +215,7 @@ function appendOverlay() {
         const formProps = Object.fromEntries(formData);
         settings = formProps
         settings.overlayOpen = false;
+        settings.tagGroups = document.getElementById('bff-tagGroups').value.split(',').map(el => el.trim());
         localStorage.setItem("betterff", JSON.stringify(settings));
 
         location.reload();
@@ -222,7 +227,7 @@ let main = function() {
         return handleFandomLoader();
     }
 
-    appendOverlay()
+    appendOverlay();
 
     if (window.location.pathname.startsWith('/forums')) {
         return;
@@ -267,7 +272,6 @@ let main = function() {
         spans.push(newEl);
     }
 
-    console.log('Sending request: ', `${settings.url}/stories/status`, storyIds)
     fetch(`${settings.url}/stories/status`, {
         method: "POST",
         headers: {

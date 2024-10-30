@@ -9,7 +9,7 @@ let settings = {
 const loadedSettings = localStorage.getItem("betterff");
 if (loadedSettings) {
     settings = JSON.parse(loadedSettings);
-    console.log("Loaded Settings from storage");
+    console.log("Loaded Settings from storage", settings);
 } else {
     localStorage.setItem("betterff", JSON.stringify(settings));
     console.log("Used Default Settings");
