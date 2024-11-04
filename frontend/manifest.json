@@ -9,7 +9,7 @@
     "content_scripts": [
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/preload.js"],
+            "js": ["js/preLoad.js"],
             "css": ["css/main.css"],
             "run_at": "document_start"
         },

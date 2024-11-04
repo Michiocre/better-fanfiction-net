@@ -1,0 +1,36 @@
+{
+  "name": "better-fanfiction-net",
+  "version": "1.0.0",
+  "description": "WIP Better search features for FanFiction.net using Tampermonkey or a browser extension.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "frontend": "web-ext run --source-dir frontend",
+    "dev": "nodemon --ignore test/ server.js",
+    "test": "mocha && web-ext lint --source-dir frontend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Michiocre/better-fanfiction-net.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Michiocre/better-fanfiction-net/issues"
+  },
+  "homepage": "https://github.com/Michiocre/better-fanfiction-net#readme",
+  "dependencies": {
+    "11": "^0.0.1",
+    "better-sqlite3": "^11.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "expect.js": "^0.3.1",
+    "express": "^4.21.1",
+    "mysql2": "^3.11.3",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.8.2",
+    "nodemon": "^3.1.7"
+  }
+}
