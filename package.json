@@ -6,8 +6,9 @@
   "scripts": {
     "start": "node server.js",
     "frontend": "web-ext run --source-dir frontend",
-    "dev": "nodemon --ignore test/ server.js",
-    "test": "mocha && web-ext lint --source-dir frontend"
+    "dev": "npm run migrate && nodemon --ignore test/ server.js",
+    "test": "mocha && web-ext lint --source-dir frontend",
+    "migrate": "node db/migrate.mjs"
   },
   "repository": {
     "type": "git",
@@ -18,14 +19,16 @@
   "bugs": {
     "url": "https://github.com/Michiocre/better-fanfiction-net/issues"
   },
-  "homepage": "https://github.com/Michiocre/better-fanfiction-net#readme",
+  "homepage": "https://github.com/Michiocre/better-fanfiction-net",
   "dependencies": {
-    "11": "^0.0.1",
+    "@blackglory/better-sqlite3-migrations": "^0.1.19",
     "better-sqlite3": "^11.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "expect.js": "^0.3.1",
     "express": "^4.21.1",
+    "extra-promise": "^7.0.0",
+    "migration-files": "^0.4.3",
     "mysql2": "^3.11.3",
     "request": "^2.88.2"
   },

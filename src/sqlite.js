@@ -13,8 +13,8 @@ function init(filename) {
         utils.log('Database file could not be found');
         throw error;
     }
-    db.exec(fs.readFileSync(path.resolve(__dirname, '../db/setup.sql')).toString());
     db.pragma('foreign_keys = ON');
+    db.pragma('journal_mode = WAL');
 }
 
  function saveFandoms(fandoms) {
