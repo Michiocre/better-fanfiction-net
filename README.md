@@ -20,14 +20,13 @@ Additionaly every user interaction still has to go through the fanfiction.net we
 
 ### Setup
 
-Create a copy of `.env.example` and rename it to `.env` change the values here to adjust either you port or what database you use.
-(Sqlite is the only option with all features currently)
+Create a copy of `.env.example` and rename it to `.env` and adjust the values if needed.
 
-Navigate to `/backend` and run `npm install` and `npm run dev` to start up the server.
+Run `npm install` and `npm run migrate` to create the sqlite file.
 
-If you use `mysql` create a new db called `betterff` and run the `db/sql/setup.sql` script.
+Run `npm run dev` or `npm start` to start up the server.
 
-Install a extension like Tampermonkey on your webbrowser and add the `frontend/tampermonkey.js` file.
+Install the extension in `frontend` on your browser temporarily.
 
 To get initial data into the database login to your `fanfiction.net` account and navigate to `https://www.fanfiction.net/selectcategory.php?cat_s_id=1` (In your profile under Publish / New Story / Select Category).
 

@@ -1,4 +1,4 @@
-let settings = {
+let defaultSettings = {
     autoLoad: false,
     url: 'http://localhost:8888',
     overlayOpen: false,
@@ -6,14 +6,16 @@ let settings = {
     tagGroups: ['general', 'generated', 'author', 'personal']
 };
 
-const loadedSettings = localStorage.getItem("betterff");
-if (loadedSettings) {
-    settings = JSON.parse(loadedSettings);
-    console.log("Loaded Settings from storage", settings);
-} else {
-    localStorage.setItem("betterff", JSON.stringify(settings));
-    console.log("Used Default Settings");
-}
+const loadedSettings = JSON.parse(localStorage.getItem("betterff")) ?? {};
+let settings = {
+    autoLoad: loadedSettings.autoLoad ?? defaultSettings.autoLoad,
+    url: loadedSettings.url ?? defaultSettings.url,
+    overlayOpen: loadedSettings.overlayOpen ?? defaultSettings.overlayOpen,
+    darkMode: loadedSettings.darkMode ?? defaultSettings.darkMode,
+    tagGroups: loadedSettings.tagGroups ?? defaultSettings.tagGroups
+};
+
+localStorage.setItem("betterff", JSON.stringify(settings));
 
 let document_observer = new MutationObserver(function (mutations) {
     if (document.head) {

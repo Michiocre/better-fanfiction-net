@@ -286,11 +286,12 @@ let main = function() {
     }).then(val => {
         updateIndicators(spans, val, communityId);
         if (settings.autoLoad) {
-            let els = document.getElementsByClassName('bff_error');
-            if (els.length > 0) {
-                els[0].click();
-            } else {
-                document.getElementsByClassName('bff_warning')[0].click();
+            let redEl = document.getElementsByClassName('bff_error');
+            let yellowEl = document.getElementsByClassName('bff_error');
+            if (redEl.length > 0) {
+                redEl[0].click();
+            } else if (yellowEl.length > 0) {
+                yellowEl[0].click();
             }
         }
     });

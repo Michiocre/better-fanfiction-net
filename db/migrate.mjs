@@ -1,3 +1,4 @@
+import { argv } from 'node:process';
 import { map } from 'extra-promise';
 import { findMigrationFilenames, readMigrationFile } from 'migration-files';
 import { migrate } from '@blackglory/better-sqlite3-migrations';
@@ -15,4 +16,10 @@ db.pragma('journal_mode = WAL');
 
 const filenames = await findMigrationFilenames('./db/migrations');
 const migrations = await map(filenames, readMigrationFile);
-migrate(db, migrations);
+const version = Number.parseInt(argv[2]);
+
+if (version) {
+    migrate(db, migrations, version);
+} else {
+    migrate(db, migrations);
+}

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "frontend": "web-ext run --source-dir frontend",
-    "dev": "npm run migrate && nodemon --ignore test/ server.js",
+    "dev": "nodemon --ignore test/ server.js",
     "test": "mocha && web-ext lint --source-dir frontend",
     "migrate": "node db/migrate.mjs"
   },

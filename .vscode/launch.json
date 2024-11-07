@@ -4,12 +4,21 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Server.js",
             "skipFiles": [
                 "<node_internals>/**"
             ],
-            "program": "server.js",
-            "cwd": "${workspaceFolder}\\backend\\"
+            "program": "${workspaceFolder}\\server.js"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Migrate.js",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "program": "${workspaceFolder}\\db\\migrate.mjs",
+            "args": ["1"]
         }
     ]
 }
