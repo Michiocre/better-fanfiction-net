@@ -27,20 +27,25 @@ html {
     max-width: 100px;
     color: white;
 }
-.bff_loading {
+.bff-loading {
     background: lightgray;
 }
-.bff_success {
+.bff-success {
     background: lightgreen;
 }
-.bff_warning {
+.bff-warning {
     background: sandybrown;
 }
-.bff_error {
+.bff-error {
     background: lightcoral;
 }
 
-.bff_overlay {
+.betterff-overlay-btn {
+    width: 30px;
+    height: 30px;
+}
+
+.bff-overlay {
     background: white;
     position: fixed;
     top: 32px;
@@ -48,6 +53,27 @@ html {
     z-index: 1000;
 }
 
-.bff_overlay.closed {
+.bff-overlay.closed {
     transform: translateX(100%);
+}
+
+.bff-form-container {
+    margin: 0 2em;
+    width: 75%;
+}
+
+.bff-row {
+    margin: 2em 0;
+}
+
+.bff-label {
+    display: inline-block;
+    width: 200px;
+}
+
+select.bff-input {
+    width: 414px;
+}
+.bff-input {
+    width: 400px;
 }

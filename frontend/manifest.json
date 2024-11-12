@@ -4,18 +4,18 @@
     "version": "0.1",
 
     "description": "Adds improved search function to fanfiction.net",
-    "web_accessible_resources": ["css/*.css"],
+    "web_accessible_resources": ["css/dark.css"],
 
     "content_scripts": [
         {
             "matches": ["*://*.fanfiction.net/*"],
             "js": ["js/preLoad.js"],
-            "css": ["css/main.css"],
+            "css": ["css/main.css", "css/datepicker.min.css"],
             "run_at": "document_start"
         },
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/frontend.js"],
+            "js": ["js/datepicker.min.js", "js/frontend.js"],
             "run_at": "document_end"
         }
     ],

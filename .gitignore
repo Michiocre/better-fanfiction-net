@@ -5,3 +5,6 @@ logs
 *.db-journal
 *.db-shm
 *.db-wal
+
+datepicker.min.css
+datepicker.min.js

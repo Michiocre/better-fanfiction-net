@@ -1,12 +1,12 @@
 function sendStories(spans, communityId) {
     let htmlEl = Array.from(document.getElementsByClassName('z-list'));
-    htmlEl = htmlEl.filter(el => el.firstChild.classList.contains('bff_error') || el.firstChild.classList.contains('bff_warning'));
+    htmlEl = htmlEl.filter(el => el.firstChild.classList.contains('bff-error') || el.firstChild.classList.contains('bff-warning'));
 
     for (let el of htmlEl) {
-        el.firstChild.classList.remove('bff_error');
-        el.firstChild.classList.remove('bff_success');
-        el.firstChild.classList.remove('bff_warning');
-        el.firstChild.classList.add('bff_loading');
+        el.firstChild.classList.remove('bff-error');
+        el.firstChild.classList.remove('bff-success');
+        el.firstChild.classList.remove('bff-warning');
+        el.firstChild.classList.add('bff-loading');
         el.firstChild.innerText = 'loading';
     }
 
@@ -38,11 +38,11 @@ function sendStories(spans, communityId) {
 
 function updateIndicators(spans, stories, communityId) {
     for (const span of spans) {
-        if (span.classList.contains('bff_success')) {
+        if (span.classList.contains('bff-success')) {
             continue;
         }
 
-        let story = stories.find(el => el.id == span.id.split('_')[2]);
+        let story = stories.find(el => el.id == span.id.split('-')[2]);
 
         let status = 'not_registered';
         if (story) {
@@ -59,18 +59,18 @@ function updateIndicators(spans, stories, communityId) {
 
         switch (status) {
             case 'loaded':
-                span.classList.remove('bff_loading');
-                span.classList.add('bff_success');
+                span.classList.remove('bff-loading');
+                span.classList.add('bff-success');
                 span.innerText = 'up to date';
                 break;
             case 'outdated':
-                span.classList.remove('bff_loading');
-                span.classList.add('bff_warning');
+                span.classList.remove('bff-loading');
+                span.classList.add('bff-warning');
                 span.innerText = 'outdated';
                 break;
             case 'not_registered':
-                span.classList.remove('bff_loading');
-                span.classList.add('bff_error');
+                span.classList.remove('bff-loading');
+                span.classList.add('bff-error');
                 span.innerText = 'not registered';
                 break;
         }
@@ -82,8 +82,8 @@ function handleFandomLoader() {
     wrapper.classList.add('bff');
     let newEl = document.createElement("span");
     newEl.innerText = "loading";
-    newEl.classList.add('bff_loading');
-    newEl.classList.add('bff_span');
+    newEl.classList.add('bff-loading');
+    newEl.classList.add('bff-span');
 
     let categories = Array.from(document.getElementsByName('pcategoryid')[0].children).map(option => {
         return {
@@ -104,12 +104,12 @@ function handleFandomLoader() {
     }
 
     newEl.onclick = function (el) {
-        if (el.target.classList.contains('bff_warning') || el.target.classList.contains('bff_error')) {
-            let list = document.getElementsByClassName('bff_span');
-            newEl.classList.remove('bff_error');
-            newEl.classList.remove('bff_success');
-            newEl.classList.remove('bff_warning');
-            newEl.classList.add('bff_loading');
+        if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
+            let list = document.getElementsByClassName('bff-span');
+            newEl.classList.remove('bff-error');
+            newEl.classList.remove('bff-success');
+            newEl.classList.remove('bff-warning');
+            newEl.classList.add('bff-loading');
             newEl.innerText = 'updating';
 
             fetch(`${settings.url}/parser/fandoms`, {
@@ -120,14 +120,14 @@ function handleFandomLoader() {
                 body: JSON.stringify({elements: fandoms}),
             }).then(res => {
                 if (res.status == 200) {
-                    newEl.classList.remove('bff_error');
-                    newEl.classList.remove('bff_warning');
-                    newEl.classList.add('bff_success');
+                    newEl.classList.remove('bff-error');
+                    newEl.classList.remove('bff-warning');
+                    newEl.classList.add('bff-success');
                     newEl.innerText = 'loaded';
                 } else {
-                    newEl.classList.remove('bff_success');
-                    newEl.classList.remove('bff_warning');
-                    newEl.classList.add('bff_error');
+                    newEl.classList.remove('bff-success');
+                    newEl.classList.remove('bff-warning');
+                    newEl.classList.add('bff-error');
                     newEl.innerText = 'error';
                 }
             });
@@ -149,18 +149,18 @@ function handleFandomLoader() {
 
             switch (status) {
                 case 'loaded':
-                    newEl.classList.remove('bff_loading');
-                    newEl.classList.add('bff_success');
+                    newEl.classList.remove('bff-loading');
+                    newEl.classList.add('bff-success');
                     newEl.innerText = 'up to date';
                     break;
                 case 'outdated':
-                    newEl.classList.remove('bff_loading');
-                    newEl.classList.add('bff_warning');
+                    newEl.classList.remove('bff-loading');
+                    newEl.classList.add('bff-warning');
                     newEl.innerText = 'outdated';
                     break;
                 case 'not_registered':
-                    newEl.classList.remove('bff_loading');
-                    newEl.classList.add('bff_error');
+                    newEl.classList.remove('bff-loading');
+                    newEl.classList.add('bff-error');
                     newEl.innerText = 'not registered';
                     break;
             }
@@ -176,8 +176,9 @@ function utf8_to_b64( str ) {
 function appendOverlay() {
     let overlay = document.createElement("div");
     overlay.innerHTML = `
-    <div id="betterff-overlay" style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff_overlay ${settings.overlayOpen?'':'closed'}">
-        <button class="btn" id="betterff-settings-button" style="position: absolute; transform: translateX(-100%);">!</button>
+    <div id="betterff-overlay" style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff-overlay ${settings.overlayOpen?'':'closed'}">
+        <button class="btn betterff-overlay-btn" id="betterff-settings-button" style="position: absolute; transform: translateX(-100%);">!</button>
+        <button class="btn betterff-overlay-btn" id="betterff-search-button" style="position: absolute; transform: translateX(-100%); top: 40px;">?</button>
         <form id="betterff-settings-form" action="javascript:;">
             <div class="tcat" style="background-color: transparent !important"><span><b>Settings</b></span></div>
             <table class="table table-bordered">
@@ -205,6 +206,9 @@ function appendOverlay() {
     </div>
     `;
     document.body.append(overlay.children[0]);
+    document.getElementById('betterff-search-button').onclick = e => {
+        window.location = "https://www.fanfiction.net/topic/241520/187482375/1/Search-Page";
+    }
     document.getElementById('betterff-settings-button').onclick = e => {
         settings.overlayOpen = !settings.overlayOpen;
         document.getElementById('betterff-overlay').classList.toggle('closed', !settings.overlayOpen);
@@ -222,12 +226,72 @@ function appendOverlay() {
     };
 }
 
+function loadSearchPage() {
+    document.getElementById('content_wrapper_inner').innerHTML = `
+        <form>
+            <div class="bff-form-container">
+            <h3>BetterFF Search</h3>
+                <div class="bff-row">
+                    <label class="bff-label">Title</label>
+                    <input class="bff-input" type="text" name="title" placeholder="Title" required></input>
+                </div>
+                <div class="bff-row">
+                    <label class="bff-label">Description</label>
+                    <input class="bff-input" type="text" name="description" placeholder="Description" required></input>
+                </div>
+                <div class="bff-row">
+                    <label class="bff-label">Date from</label>
+                    <input class="bff-input bff-datepicker" type="text" id="bff-datefrom" name="datefrom" placeholder="1970-01-01" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                </div>
+                <div class="bff-row">
+                    <label class="bff-label">Date until</label>
+                    <input class="bff-input bff-datepicker" type="text" id="bff-dateuntil" name="dateuntil" placeholder="` + (new Date()).toISOString().substring(0,10) + `" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                </div>
+                <div class="bff-row">
+                    <label class="bff-label">Order by</label>
+                    <select class="bff-input" type="dropdown" name="sort" placeholder="Description" required>
+                        <option selected>Update Date</option>
+                        <option>Publish Date</option>
+                        <option>Reviews</option>
+                        <option>Favorites</option>
+                        <option>Follows</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+    `;
+
+    const pickerFrom = datepicker("#bff-datefrom", {
+        formatter: (input, date, instance) => {
+            input.value = date.toISOString().substring(0,10);
+        }
+    });
+    const pickerUntil = datepicker("#bff-dateuntil", {
+        formatter: (input, date, instance) => {
+            input.value = date.toISOString().substring(0,10);
+        }
+    })
+}
+
+function loadSearchResult() {
+    document.getElementById('content_wrapper_inner').innerHTML = `
+    `;
+}
+
 let main = function() {
     if (window.location.pathname.startsWith('/selectcategory.php')) {
         return handleFandomLoader();
     }
 
     appendOverlay();
+
+    if (window.location.pathname.startsWith('/topic/241520/187482375/1/Search-Page')) {
+        return loadSearchPage();
+    }
+
+    if (window.location.pathname.startsWith('/topic/241520/187253629/1/Search-Result')) {
+        return loadSearchResult();
+    }
 
     if (window.location.pathname.startsWith('/forums')) {
         return;
@@ -258,13 +322,13 @@ let main = function() {
 
         storyEl.classList.add('bff');
         let newEl = document.createElement("span");
-        newEl.id = 'bff_span_' + id;
+        newEl.id = 'bff-span-' + id;
         newEl.innerText = "loading";
-        newEl.classList.add('bff_loading');
-        newEl.classList.add('bff_span');
+        newEl.classList.add('bff-loading');
+        newEl.classList.add('bff-span');
         newEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime'));
         newEl.onclick = function (el) {
-            if (el.target.classList.contains('bff_warning') || el.target.classList.contains('bff_error')) {
+            if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
                 sendStories(spans, communityId);
             }
         }
@@ -286,8 +350,8 @@ let main = function() {
     }).then(val => {
         updateIndicators(spans, val, communityId);
         if (settings.autoLoad) {
-            let redEl = document.getElementsByClassName('bff_error');
-            let yellowEl = document.getElementsByClassName('bff_error');
+            let redEl = document.getElementsByClassName('bff-error');
+            let yellowEl = document.getElementsByClassName('bff-error');
             if (redEl.length > 0) {
                 redEl[0].click();
             } else if (yellowEl.length > 0) {

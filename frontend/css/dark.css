@@ -29,7 +29,7 @@ a {
 
 .dropdown-menu > li > a:hover {color: #e6edf3 !important;}
 
-#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff_overlay   {
+#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff-overlay   {
     background-color: #010409 !important;
     border-color: #242a30 !important;
     box-shadow: none !important;
