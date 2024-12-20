@@ -34,8 +34,7 @@
     "expect.js": "^0.3.1",
     "extra-promise": "^7.0.0",
     "migration-files": "^0.4.3",
-    "mocha": "^10.8.2",
-    "nodemon": "^3.1.7",
-    "web-ext": "^8.3.0"
+    "mocha": "^11.0.1",
+    "nodemon": "^3.1.7"
   }
 }

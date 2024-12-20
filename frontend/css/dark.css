@@ -29,20 +29,25 @@ a {
 
 .dropdown-menu > li > a:hover {color: #e6edf3 !important;}
 
-#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff-overlay   {
+#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff-overlay, .panel_normal, table, .nav-tabs > .active > a   {
     background-color: #010409 !important;
     border-color: #242a30 !important;
     box-shadow: none !important;
+    color: #e6edf3 !important;
 }
 
 hr, .lc-left {
     background: #242a30 !important;
 }
 
-#content_wrapper_inner, .tcat, .table-bordered, td {
+#content_wrapper_inner, .tcat, .table-bordered, td, .topnav, th, thead, .nav-tabs {
     border-color: #242a30 !important;
 }
 
-div > .zhover:hover {
+div > .zhover:hover, l.topnav ul li a:hover, ul.topnav ul li.active, ul.topnav ul li a:hover, ul.topnav ul li.active {
     background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
+}
+
+.table-striped tbody > tr:nth-child(2n+1) > td {
+    background-color: #0d1117 !important;
 }
