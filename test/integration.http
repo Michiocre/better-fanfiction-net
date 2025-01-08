@@ -16,3 +16,10 @@ GET /fandoms
 ?? status == 200
 ?? body contains "All Categories"
 ?? body contains "Harry Potter"
+
+POST /stories
+Content-Type: application/json
+{
+    
+}
+?? status == 200

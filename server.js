@@ -74,8 +74,8 @@ async function main() {
     });
 
     app.post('/stories', async (req, res) => {
-        let params = req.body;
-        if (params.limit < 1 || params.limit > 100) {
+        let params = req.body ?? {};
+        if (!params.limit || params.limit < 1 || params.limit > 100) {
             return res.status(400).send("The limit has to be between 1 and 100 (inclusive)");
         }
 
