@@ -6,10 +6,12 @@ html {
     background-color: #222222 !important;
     overflow-x: hidden;
 }
+
 .bff {
     position: relative;
 }
-.bff > span {
+
+.bff>span {
     cursor: pointer;
     margin-right: 10px;
     content: "";
@@ -23,19 +25,24 @@ html {
     transition: max-width 0.2s, color 0.2s;
     overflow: hidden;
 }
-.bff > span:hover {
+
+.bff>span:hover {
     max-width: 100px;
     color: white;
 }
+
 .bff-loading {
     background: lightgray;
 }
+
 .bff-success {
     background: lightgreen;
 }
+
 .bff-warning {
     background: sandybrown;
 }
+
 .bff-error {
     background: lightcoral;
 }
@@ -74,6 +81,7 @@ html {
 select.bff-input {
     width: 414px;
 }
+
 .bff-input {
     width: 400px;
 }

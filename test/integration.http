@@ -1,0 +1,18 @@
+@host=http://localhost:{{PORT}}
+###
+POST /parser/fandoms
+Content-Type: application/json
+{
+    "elements": [
+        {
+            "id": 224,
+            "category": "Books",
+            "name": "Harry Potter"
+        }
+    ]
+}
+?? status == 200
+GET /fandoms
+?? status == 200
+?? body contains "All Categories"
+?? body contains "Harry Potter"

@@ -5,9 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "frontend": "web-ext run --source-dir frontend",
+    "frontend": "npx web-ext run --source-dir frontend",
     "dev": "nodemon --ignore test/ server.js",
-    "test": "mocha && web-ext lint --source-dir frontend",
+    "test": "mocha && npx httpyac test/integration.http -a -o short && npx web-ext lint --source-dir frontend",
     "migrate": "node db/migrate.mjs",
     "postinstall": "copyfiles -f node_modules/js-datepicker/dist/datepicker.min.css frontend/css/ && copyfiles -f node_modules/js-datepicker/dist/datepicker.min.js frontend/js/"
   },
@@ -35,6 +35,7 @@
     "extra-promise": "^7.0.0",
     "migration-files": "^0.4.3",
     "mocha": "^11.0.1",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "httpyac": "^6.16.5"
   }
 }
