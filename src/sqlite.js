@@ -282,7 +282,16 @@ function getStories(params) {
         throw Error('Database connection has not been established')  
     }
 
-    const stmt = db.prepare("SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE st.title MATCH $title LIMIT $limit OFFSET $page");
+    let searchString = "SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE ";
+    if (params.title && params.title != '') {
+        searchString += "st.title MATCH $title AND ";
+    }
+    searchString += "1 == 1 ";
+
+    searchString += "LIMIT $limit OFFSET $page"
+
+
+    const stmt = db.prepare(searchString);
     return stmt.all({
         limit: params.limit ?? 100,
         page: params.offset ?? 0,

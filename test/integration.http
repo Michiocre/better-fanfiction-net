@@ -20,6 +20,5 @@ GET /fandoms
 POST /stories
 Content-Type: application/json
 {
-    
 }
 ?? status == 200

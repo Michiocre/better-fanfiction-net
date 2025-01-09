@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "frontend": "npx web-ext run --source-dir frontend",
+    "frontend": "npx web-ext run --source-dir frontend --start-url www.fanfiction.net",
     "dev": "nodemon --ignore test/ server.js",
     "test": "mocha && npx httpyac test/integration.http -a -o short && npx web-ext lint --source-dir frontend",
     "migrate": "node db/migrate.mjs",
