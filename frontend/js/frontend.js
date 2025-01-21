@@ -233,11 +233,11 @@ function loadSearchPage() {
             <h3>BetterFF Search</h3>
                 <div class="bff-row">
                     <label class="bff-label">Title</label>
-                    <input class="bff-input" type="text" name="title" placeholder="Title" required></input>
+                    <input class="bff-input" type="text" name="title" placeholder="Title"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Description</label>
-                    <input class="bff-input" type="text" name="description" placeholder="Description" required></input>
+                    <input class="bff-input" type="text" name="description" placeholder="Description"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date from</label>
@@ -249,7 +249,7 @@ function loadSearchPage() {
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Order by</label>
-                    <select class="bff-input" type="dropdown" name="sort" placeholder="Description" required>
+                    <select class="bff-input" type="dropdown" name="sort" placeholder="Description">
                         <option selected>Update Date</option>
                         <option>Publish Date</option>
                         <option>Reviews</option>
@@ -257,6 +257,7 @@ function loadSearchPage() {
                         <option>Follows</option>
                     </select>
                 </div>
+                <button class="btn" id="bff-search-button">Search</button>
             </div>
         </form>
     `;
@@ -271,6 +272,13 @@ function loadSearchPage() {
             input.value = date.toISOString().substring(0,10);
         }
     })
+
+    document.getElementById('bff-search-button').onclick = (event) => {
+        event.preventDefault();
+        let searchString = "";
+
+        window.location.href = window.location.origin + "/topic/241520/187253629/1/Search-Result/" + searchString;
+    }; 
 }
 
 function loadSearchResult() {

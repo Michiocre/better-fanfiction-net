@@ -7,7 +7,8 @@
     "start": "node server.js",
     "frontend": "npx web-ext run --source-dir frontend --start-url www.fanfiction.net",
     "dev": "nodemon --ignore test/ server.js",
-    "test": "mocha && npx httpyac test/integration.http -a -o short && npx web-ext lint --source-dir frontend",
+    "test": "mocha && npx web-ext lint --source-dir frontend",
+    "livetest": "npx httpyac test/integration.http -a -o short",
     "migrate": "node db/migrate.mjs",
     "postinstall": "copyfiles -f node_modules/js-datepicker/dist/datepicker.min.css frontend/css/ && copyfiles -f node_modules/js-datepicker/dist/datepicker.min.js frontend/js/"
   },
