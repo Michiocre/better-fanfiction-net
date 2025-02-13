@@ -1,5 +1,12 @@
 const utils = require('./utils');
 
+function parseNumberOrNull(content) {
+    if (!content) {
+        return null;
+    }
+    return parseNumber(content);
+}
+
 function parseNumber(content) {
     if (!content) {
         return 0;
@@ -109,7 +116,7 @@ function parseSearchDivData(content) {
             reviews: parseNumber(data[9]),
             favs: parseNumber(data[10]),
             follows: parseNumber(data[11]),
-            updated: parseNumber(data[12]),
+            updated: parseNumberOrNull(data[12]),
             published: parseNumber(data[13]),
             pairings: pairings || [],
             characters: characters || [],
@@ -122,16 +129,13 @@ function parseSearchDivData(content) {
 
 function parseSearchDivHeader(content) {
     try {
-        let pattern = new RegExp(/\s*<a.*?href="\/s\/(\d*).*src="([^"]*)"[^>]*>(.*?)<\/a>(?:.*?href="\/s.*?<\/a>)?(?:.*?href="\/u\/(\d+).*?>(.*?)<\/a>)?(?:.*?href="\/r.*?)?\s*$/);
-        let data = pattern.exec(content);
-
         return {
-            id: parseNumber(data[1]),
-            image: data[2],
-            title: data[3],
+            id: parseNumber(/\/s\/(\d+)/.exec(content)[1]),
+            image: parseNumberOrNull(/\/image\/(\d+)/.exec(content)?.[1]),
+            title: /"66">(.*?)<\/a>/.exec(content)[1],
             author: {
-                id: parseNumber(data[4]),
-                name: data[5]
+                id: parseNumber(/\/u\/(\d+)/.exec(content)?.[1]),
+                name: /\/u\/[^>]*>(.*?)<\/a>/.exec(content)?.[1]
             }
         }
     } catch (error) {
@@ -234,6 +238,7 @@ function parseUserPage(url, parts) {
 module.exports = {
     parseDate,
     parseNumber,
+    parseNumberOrNull,
     parseChars,
     parseSearchDivData,
     parseCommunityDiv,

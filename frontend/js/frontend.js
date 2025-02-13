@@ -227,52 +227,104 @@ function appendOverlay() {
 }
 
 function loadSearchPage() {
+    let params = window.location.href.split('Search-Page/')[1].split('/').map(el => decodeURI(el));
+    console.log(params);
     document.getElementById('content_wrapper_inner').innerHTML = `
-        <form>
+        <form id="bff-search-form">
             <div class="bff-form-container">
-            <h3>BetterFF Search</h3>
+                <h3>BetterFF Search</h3>
                 <div class="bff-row">
                     <label class="bff-label">Title</label>
-                    <input class="bff-input" type="text" name="title" placeholder="Title"></input>
+                    <input class="bff-input" type="text" name="title" placeholder="Title" value="${params[0]}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Description</label>
-                    <input class="bff-input" type="text" name="description" placeholder="Description"></input>
+                    <input class="bff-input" type="text" name="description" placeholder="Description" value="${params[1]}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date from</label>
-                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" placeholder="1970-01-01" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" value="${params[2]}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date until</label>
-                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" placeholder="` + (new Date()).toISOString().substring(0,10) + `" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" value="${params[3]}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Order by</label>
                     <select class="bff-input" type="dropdown" name="sort" placeholder="Description">
-                        <option selected>Update Date</option>
-                        <option>Publish Date</option>
-                        <option>Reviews</option>
-                        <option>Favorites</option>
-                        <option>Follows</option>
+                        <option value="0" ${params[4] == '0' ? 'selected' : ''}>Update Date</option>
+                        <option value="1" ${params[4] == '1' ? 'selected' : ''}>Publish Date</option>
+                        <option value="2" ${params[4] == '2' ? 'selected' : ''}>Reviews</option>
+                        <option value="3" ${params[4] == '3' ? 'selected' : ''}>Favorites</option>
+                        <option value="4" ${params[4] == '4' ? 'selected' : ''}>Follows</option>
                     </select>
                 </div>
                 <button class="btn" id="bff-search-button">Search</button>
             </div>
         </form>
-    `;
+
+        <div>
+            <center id="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;"></center><hr size="1" noshade="">
+            
+            <div id="bff-search-result">
+            </div>
+        </div>
+        `;
 
     document.getElementById('bff-search-button').onclick = (event) => {
         event.preventDefault();
+
+        let formData = new FormData(document.getElementById('bff-search-form'));
         let searchString = "";
 
-        window.location.href = window.location.origin + "/topic/241520/187253629/1/Search-Result/" + searchString;
+        let postObject = {};
+        formData.forEach((value, key) => {
+            searchString += encodeURI(value) + '/';
+            postObject[key] = value;
+        });
+
+        window.history.replaceState(null, "", origin + "/topic/241520/187482375/1/Search-Page/" + searchString);
+
+        fetch(`${settings.url}/stories`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(postObject)
+        }).then(async res => {
+            if (res.body) {
+                return res.json();
+            }
+            return [];
+        }).then(val => {
+            document.getElementById('bff-search-result').innerHTML = "";
+
+            document.getElementById('bff-search-pagination').innerHTML = `
+                ${val[0].count} | Page  <b>1</b>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=2">2</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=3">3</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=4">4</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=11">11</a>  ..  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=12134">Last</a> <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=2">Next »</a>`;
+
+            console.log(val);
+            val.forEach(story => document.getElementById('bff-search-result').appendChild(createStory(story)));
+        });
     }; 
 }
 
-function loadSearchResult() {
-    document.getElementById('content_wrapper_inner').innerHTML = `
+function createStory(data) {
+    let story = document.createElement("div");
+    story.innerHTML = `
+    <div class="z-list zhover zpointer" style="min-height:77px;border-bottom:1px #cdcdcd solid;">
+        <a class="stitle" href="/s/${data.id}">
+            <img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="${data.image_id ? '/image/'+data.image_id+'/75/' : '/static/images/d_60_90.jpg'}" width="50" height="66">
+                ${data.title}
+        </a>
+        ${data.chapters > 1 ? '<a href="/s/' + data.id +'/'+ data.chapters + '"><span class="icon-chevron-right xicon-section-arrow"></span></a>' : ''}
+          by <a href="/u/${data.author_id}">${data.author_name}</a>  ${data.reviews > 0 ? '<a class="reviews" href="/r/'+ data.id +'/">reviews</a>' : ''}
+        <div class="z-indent z-padtop">${data.description}
+            <div class="z-padtop2 xgray">Rated: ${data.rating} - English ${data.genreA ? ' - ' + data.genreA : ''}${data.genreB ? '/' + data.genreB : ''} - Chapters: ${data.chapters} - Words: ${data.words} ${data.reviews > 0 ? '- Reviews: ' + data.reviews : ''} ${data.favs > 0 ? '- Favs: ' + data.favs : ''} ${data.follows > 0 ? '- Follows: ' + data.follows : ''} - Updated: <span data-xutime="1739367008">23h ago</span> - Published: <span data-xutime="1723634397">Aug 14, 2024</span> - Naruto U., Ino Y., Hinata H., Tayuya${data.completed ? ' - Complete':''}</div>
+        </div>
+    </div>
     `;
+
+    return story;
 }
 
 let main = function() {
@@ -284,10 +336,6 @@ let main = function() {
 
     if (window.location.pathname.startsWith('/topic/241520/187482375/1/Search-Page')) {
         return loadSearchPage();
-    }
-
-    if (window.location.pathname.startsWith('/topic/241520/187253629/1/Search-Result')) {
-        return loadSearchResult();
     }
 
     if (window.location.pathname.startsWith('/forums')) {

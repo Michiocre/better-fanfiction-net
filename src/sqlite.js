@@ -167,10 +167,10 @@ function init(filename) {
                 return;
             }
 
-             saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
+            saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
 
-            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB);
+            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB, image_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB, story.image);
             
             const insertTexts = db.prepare('INSERT OR REPLACE INTO story_texts (id, title, description) VALUES(?, ?, ?)')
             insertTexts.run(story.id, story.title, story.description);
@@ -282,20 +282,22 @@ function getStories(params) {
         throw Error('Database connection has not been established')  
     }
 
-    let searchString = "SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE ";
-    if (params.title && params.title != '') {
-        searchString += "st.title MATCH $title AND ";
-    }
-    searchString += "1 == 1 ";
-
-    searchString += "LIMIT $limit OFFSET $page"
-
+    let searchString = `SELECT s.*, st.title, st.description, count(*) over() as count, a.name as author_name
+        FROM story s
+        JOIN story_texts st ON s.id = st.id
+        JOIN author a ON s.author_id = a.id
+        WHERE 1 == 1
+        ${params.title && params.title != '' ? 'AND st.title MATCH $title' : ''}
+        ${params.description && params.description != '' ? 'AND st.description MATCH $description' : ''}
+        ORDER BY rank, coalesce(s.updated, s.published) desc
+        LIMIT $limit OFFSET $page`;
 
     const stmt = db.prepare(searchString);
     return stmt.all({
         limit: params.limit ?? 100,
         page: params.offset ?? 0,
-        title: params.title ?? ''
+        title: params.title ?? '',
+        description: params.description ?? ''
     });
 }
 

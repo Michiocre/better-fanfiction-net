@@ -8,6 +8,8 @@ describe('basic parse test', () => {
         expect(parser.parseNumber('1,000')).to.be(1000);
         expect(parser.parseNumber('10.50')).to.be(10);
         expect(parser.parseNumber(10)).to.be(10);
+        expect(parser.parseNumber(null)).to.be(0);
+        expect(parser.parseNumberOrNull(null)).to.be(null);
     });
 
     it('should parseDate', () => {
@@ -92,7 +94,7 @@ describe('parser parseSearchDivData', () => {
             reviews: 0,
             favs: 0,
             follows: 0,
-            updated: 0,
+            updated: null,
             published: 1678461818,
             characters: ['Voldemort'],
             pairings: [['Harry P.', 'OC']],
@@ -116,7 +118,7 @@ describe('parser parseSearchDivData', () => {
             reviews: 0,
             favs: 0,
             follows: 0,
-            updated: 0,
+            updated: null,
             published: 1689099337,
             characters: ['Alina S.', 'Rhaenyra T.'],
             pairings: [],
@@ -140,7 +142,7 @@ describe('parser parseSearchDivData', () => {
             reviews: 1,
             favs: 3,
             follows: 2,
-            updated: 0,
+            updated: null,
             published: 1689172472,
             characters: ['Marinette D-C./Ladybug', 'Adrien A./Cat Noir', 'Alya C./Lady Wifi/Rena Rouge', 'Zoé Lee/Vesperia'],
             pairings: [],
@@ -191,7 +193,7 @@ describe('parser parseSearchDivData', () => {
             reviews: 7,
             favs: 5,
             follows: 1,
-            updated: 0,
+            updated: null,
             published: 1091772486,
             characters: [],
             pairings: [],
@@ -321,7 +323,7 @@ describe('parser parseSearchPage', () => {
             genreA: "Family",
             genreB: "Adventure",
             id: 13476426,
-            image: "/image/6038841/75/",
+            image: 6038841,
             language: "English",
             pairings: [["Petunia D.", "OC"]],
             published: 1578845283,
@@ -351,14 +353,14 @@ describe('parser parseSearchPage', () => {
             genreA: "Sci-Fi",
             genreB: "Romance",
             id: 14357894,
-            image: "/image/7301701/75/",
+            image: 7301701,
             language: "English",
             pairings: [],
             published: 1716258296,
             rated: "T", 
             reviews: 4, 
             title: "Devil of the Iron Flower", 
-            updated: 0, 
+            updated: null, 
             words: 216, 
             xfandom: "Mobile Suit Gundam: Iron-Blooded Orphans"
         }]);
@@ -374,7 +376,7 @@ describe('parser parseUserPage', () => {
         ).to.eql([{
             id: 13474353,
             title: 'Drabbles, OS, and passing thoughts',
-            image: "/image/5920357/75/",
+            image: 5920357,
             fandom: 'Harry Potter',
             author: {
                 id: 5503799,
@@ -390,7 +392,7 @@ describe('parser parseUserPage', () => {
             reviews: 0,
             favs: 0,
             follows: 1,
-            updated: 0,
+            updated: null,
             published: 1578593189,
             characters: [],
             pairings: [],
