@@ -10,12 +10,12 @@
         {
             "matches": ["*://*.fanfiction.net/*"],
             "js": ["js/preLoad.js"],
-            "css": ["css/main.css", "css/datepicker.min.css"],
+            "css": ["css/main.css"],
             "run_at": "document_start"
         },
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/datepicker.min.js", "js/frontend.js"],
+            "js": ["js/frontend.js"],
             "run_at": "document_end"
         }
     ],

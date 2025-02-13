@@ -241,11 +241,11 @@ function loadSearchPage() {
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date from</label>
-                    <input class="bff-input bff-datepicker" type="text" id="bff-datefrom" name="datefrom" placeholder="1970-01-01" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" placeholder="1970-01-01" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date until</label>
-                    <input class="bff-input bff-datepicker" type="text" id="bff-dateuntil" name="dateuntil" placeholder="` + (new Date()).toISOString().substring(0,10) + `" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
+                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" placeholder="` + (new Date()).toISOString().substring(0,10) + `" pattern="^\\d{4}-\\d\\d-\\d\\d$"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Order by</label>
@@ -261,17 +261,6 @@ function loadSearchPage() {
             </div>
         </form>
     `;
-
-    const pickerFrom = datepicker("#bff-datefrom", {
-        formatter: (input, date, instance) => {
-            input.value = date.toISOString().substring(0,10);
-        }
-    });
-    const pickerUntil = datepicker("#bff-dateuntil", {
-        formatter: (input, date, instance) => {
-            input.value = date.toISOString().substring(0,10);
-        }
-    })
 
     document.getElementById('bff-search-button').onclick = (event) => {
         event.preventDefault();

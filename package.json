@@ -9,8 +9,7 @@
     "dev": "nodemon --ignore test/ server.js",
     "test": "mocha && npx web-ext lint --source-dir frontend",
     "livetest": "npx httpyac test/integration.http -a -o short",
-    "migrate": "node db/migrate.mjs",
-    "postinstall": "copyfiles -f node_modules/js-datepicker/dist/datepicker.min.css frontend/css/ && copyfiles -f node_modules/js-datepicker/dist/datepicker.min.js frontend/js/"
+    "migrate": "node db/migrate.mjs"
   },
   "repository": {
     "type": "git",
@@ -26,17 +25,16 @@
     "better-sqlite3": "^11.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.21.1",
-    "js-datepicker": "^5.18.3"
+    "express": "^4.21.1"
   },
   "devDependencies": {
     "@blackglory/better-sqlite3-migrations": "^0.1.19",
     "copyfiles": "^2.4.1",
     "expect.js": "^0.3.1",
     "extra-promise": "^7.0.0",
+    "httpyac": "^6.16.5",
     "migration-files": "^0.4.3",
     "mocha": "^11.0.1",
-    "nodemon": "^3.1.7",
-    "httpyac": "^6.16.5"
+    "nodemon": "^3.1.7"
   }
 }
