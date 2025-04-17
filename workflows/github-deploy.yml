@@ -1,0 +1,27 @@
+name: Build and deplay the site to the server
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  # # Build process
+  # Build:
+  #   # This ensures the workflow will run on our machine
+  #   runs-on: self-hosted
+  #   steps:
+  #     - uses: actions/checkout@v4
+
+  #     - name: Build Static Site
+  #       run: |
+  #         npm install
+  #         npm run build
+  # Copy the output files from the astro build to the server
+  Deploy:
+    runs-on: self-hosted
+    # needs: Build
+    steps:
+      - name: Deploy to Blog Server
+        run: |
+          cp -R * /home/betterff/dist/
