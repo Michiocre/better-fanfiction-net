@@ -6,22 +6,19 @@ on:
   workflow_dispatch:
 
 jobs:
-  # # Build process
-  # Build:
-  #   # This ensures the workflow will run on our machine
-  #   runs-on: self-hosted
-  #   steps:
-  #     - uses: actions/checkout@v4
+  Build:
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Build Static Site
-  #       run: |
-  #         npm install
-  #         npm run build
-  # Copy the output files from the astro build to the server
+      - name: Build Static Site
+        run: |
+          npm install
+          npm run migrate
   Deploy:
     runs-on: self-hosted
     # needs: Build
     steps:
-      - name: Deploy to Blog Server
+      - name: Deploy to Server
         run: |
           cp -R * /home/betterff/dist/
