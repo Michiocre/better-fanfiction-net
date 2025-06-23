@@ -16,7 +16,7 @@ function sendStories(spans, communityId) {
         communityEl = document.getElementById('gui_table1')?.innerHTML;
     }
 
-    fetch(`${settings.url}/parser/page`, {
+    content.fetch(`${settings.url}/parser/page`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -112,7 +112,7 @@ function handleFandomLoader() {
             newEl.classList.add('bff-loading');
             newEl.innerText = 'updating';
 
-            fetch(`${settings.url}/parser/fandoms`, {
+            content.fetch(`${settings.url}/parser/fandoms`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -135,7 +135,7 @@ function handleFandomLoader() {
     }
     wrapper.insertBefore(newEl, wrapper.children[2]);
 
-    fetch(`${settings.url}/fandoms/count`).then(res => {
+    content.fetch(`${settings.url}/fandoms/count`).then(res => {
         res.json().then(val => {
             val.count--;
             let status = 'not_registered';
@@ -285,7 +285,7 @@ function loadSearchPage() {
 
         window.history.replaceState(null, "", origin + "/topic/241520/187482375/1/Search-Page/" + searchString);
 
-        fetch(`${settings.url}/stories`, {
+        content.fetch(`${settings.url}/stories`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -381,7 +381,7 @@ let main = function() {
         spans.push(newEl);
     }
 
-    fetch(`${settings.url}/stories/status`, {
+    content.fetch(`${settings.url}/stories/status`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

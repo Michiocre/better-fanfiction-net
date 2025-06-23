@@ -19,5 +19,8 @@
             "run_at": "document_end"
         }
     ],
-    "permissions": ["http://localhost/*"]
+    "permissions": [
+        "http://localhost/*",
+        "https://michiocre.myaddr.io/betterff/*"
+    ]
 }
