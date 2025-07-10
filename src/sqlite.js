@@ -277,9 +277,30 @@ function init(filename) {
     return stmt.get(id);
 }
 
+/**
+ * @param {Object} params - GetStoriesParameter
+ * @param {string} params.title
+ * @param {string} params.description
+ * @param {string} params.datefrom
+ * @param {string} params.dateuntil
+ * @param {string} params.sort
+ * @param {number} params.limit
+ * @param {number} params.page
+ * @returns {Array<any>}
+ */
 function getStories(params) {
     if (!db) {
         throw Error('Database connection has not been established')  
+    }
+
+    let sortings = {
+        "relavance": "ORDER BY rank desc, coalesce(s.updated, s.published) desc",
+        "update": "ORDER BY coalesce(s.updated, s.published) desc, rank desc",
+        "published": "ORDER BY s.published desc, rank desc",
+        "reviews": "ORDER BY s.reviews desc, rank desc",
+        "favorites": "ORDER BY s.favs desc, rank desc",
+        "follows": "ORDER BY s.follows desc, rank desc",
+        "words": "ORDER BY s.words desc, rank desc",
     }
 
     let searchString = `SELECT s.*, st.title, st.description, count(*) over() as count, a.name as author_name
@@ -287,18 +308,41 @@ function getStories(params) {
         JOIN story_texts st ON s.id = st.id
         JOIN author a ON s.author_id = a.id
         WHERE 1 == 1
-        ${params.title && params.title != '' ? 'AND st.title MATCH $title' : ''}
-        ${params.description && params.description != '' ? 'AND st.description MATCH $description' : ''}
-        ORDER BY rank, coalesce(s.updated, s.published) desc
-        LIMIT $limit OFFSET $page`;
+        ${params?.title != '' ? 'AND st.title MATCH $title' : ''}
+        ${params?.description != '' ? 'AND st.description MATCH $description' : ''}
+        ${params?.datefrom != '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
+        ${params?.dateuntil != '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
+
+        ${sortings[params.sort] ?? sortings["relavance"]}
+        LIMIT $limit OFFSET $offset`;
 
     const stmt = db.prepare(searchString);
-    return stmt.all({
-        limit: params.limit ?? 100,
-        page: params.offset ?? 0,
+
+    let offset = (params.page - 1) * (params.limit) ?? 0;
+    
+    let stories = stmt.all({
+        limit: params.limit,
+        offset: offset,
         title: params.title ?? '',
-        description: params.description ?? ''
+        description: params.description ?? '',
+        datefrom: utils.dateStringToUnix(params.datefrom),
+        dateuntil: utils.dateStringToUnix(params.dateuntil)
     });
+
+    let total = stories[0]?.count ?? 0;
+
+    if (total == 0 && offset > 0) {
+        params.page = 1;
+        return getStories(params);
+    }
+
+    return {
+        stories,
+        limit: params.limit,
+        count: stories.length,
+        total: total,
+        page: params.page
+    } 
 }
 
  function getCommunitiesByStoryId(storyId) {

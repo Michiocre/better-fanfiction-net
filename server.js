@@ -76,10 +76,16 @@ async function main() {
         res.send(await db.getFandomsByCategory(req.params.category));
     });
 
-    app.post('/stories', async (req, res) => {
+    app.post('/stories', cors(corsOptions), async (req, res) => {
         let params = req.body ?? {};
-        if (params.limit < 1 || params.limit > 100) {
-            return res.status(400).send("The limit has to be between 1 and 100 (inclusive)");
+        params.limit = utils.clamp(Number(params.limit), 1, 100);
+        params.page = utils.clamp(Number(params.page), 1, Number.MAX_VALUE);
+
+        if (Number.isNaN(params.limit)) {
+            return res.status(400).send("Invalid limit parameter, expected [Number]");
+        }
+        if (Number.isNaN(params.page)) {
+            return res.status(400).send("Invalid limit page, expected [Number]");
         }
 
         res.status(200).send(await db.getStories(params));

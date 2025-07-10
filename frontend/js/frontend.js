@@ -228,87 +228,168 @@ function appendOverlay() {
 
 function loadSearchPage() {
     let urlParts = window.location.href.split('Search-Page/');
-    let params = ["","","","",""];
+    let paramMap = ["title", "description", "datefrom", "dateuntil", "sort", "page", "limit"]
+    let params = {
+        title: "",
+        description: "",
+        page: 1,
+        limit: 100
+    };
+    let sendRightAway = false;
     if (urlParts.length > 1) {
-        params = urlParts[1].split('/').map(el => decodeURI(el));
+        var paramsList = urlParts[1].split('/').map(el => decodeURI(el));
+        for (let i = 0; i < paramsList.length; i++) {
+            params[paramMap[i]] = paramsList[i];
+        }
+        if (urlParts[1] != '') {
+            sendRightAway = true;
+        }
     }
+    console.log(params);
     document.getElementById('content_wrapper_inner').innerHTML = `
         <form id="bff-search-form">
             <div class="bff-form-container">
                 <h3>BetterFF Search</h3>
                 <div class="bff-row">
                     <label class="bff-label">Title</label>
-                    <input class="bff-input" type="text" name="title" placeholder="Title" value="${params[0]}"></input>
+                    <input class="bff-input" type="text" name="title" placeholder="Title" value="${params.title}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Description</label>
-                    <input class="bff-input" type="text" name="description" placeholder="Description" value="${params[1]}"></input>
+                    <input class="bff-input" type="text" name="description" placeholder="Description" value="${params.description}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date from</label>
-                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" value="${params[2]}"></input>
+                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" value="${params.datefrom}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Date until</label>
-                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" value="${params[3]}"></input>
+                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" value="${params.dateuntil}"></input>
                 </div>
                 <div class="bff-row">
                     <label class="bff-label">Order by</label>
                     <select class="bff-input" type="dropdown" name="sort" placeholder="Description">
-                        <option value="0" ${params[4] == '0' ? 'selected' : ''}>Update Date</option>
-                        <option value="1" ${params[4] == '1' ? 'selected' : ''}>Publish Date</option>
-                        <option value="2" ${params[4] == '2' ? 'selected' : ''}>Reviews</option>
-                        <option value="3" ${params[4] == '3' ? 'selected' : ''}>Favorites</option>
-                        <option value="4" ${params[4] == '4' ? 'selected' : ''}>Follows</option>
+                        <option value="relevance" ${params.sort == 'relevance' ? 'selected' : ''}>Relevance</option>
+                        <option value="update" ${params.sort == 'update' ? 'selected' : ''}>Update Date</option>
+                        <option value="publish" ${params.sort == 'publish' ? 'selected' : ''}>Publish Date</option>
+                        <option value="reviews" ${params.sort == 'reviews' ? 'selected' : ''}>Reviews</option>
+                        <option value="favorites" ${params.sort == 'favorites' ? 'selected' : ''}>Favorites</option>
+                        <option value="follows" ${params.sort == 'follows' ? 'selected' : ''}>Follows</option>
+                        <option value="words" ${params.sort == 'words' ? 'selected' : ''}>Words</option>
                     </select>
                 </div>
-                <button class="btn" id="bff-search-button">Search</button>
+                <button class="btn" type="button" id="bff-search-button">Search</button>
+                <button class="btn" id="bff-search-button-hidden">Search</button>
             </div>
+            <input type="hidden" id="bff-limit" name="limit" value="${params.limit}"></input>
+            <input type="hidden" id="bff-page" name="page" value="${params.page}"></input>
         </form>
 
         <div>
-            <center id="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;"></center><hr size="1" noshade="">
-            
-            <div id="bff-search-result">
-            </div>
+            <center id="bff-pagination-top" class="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;"></center>
+            <div id="bff-search-result"></div>
+            <center id="bff-pagination-bottom" class="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;">
         </div>
         `;
 
-    document.getElementById('bff-search-button').onclick = (event) => {
+    document.getElementById('bff-search-button').onmousedown = (event) => {
         event.preventDefault();
+        document.getElementById('bff-page').value = 1;
+        searchStories(paramMap);
+    };
 
-        let formData = new FormData(document.getElementById('bff-search-form'));
-        let searchString = "";
+    document.getElementById('bff-search-button-hidden').onclick = (event) => {
+        event.preventDefault();
+        searchStories(paramMap);
+    };
 
-        let postObject = {};
-        formData.forEach((value, key) => {
-            searchString += encodeURI(value) + '/';
-            postObject[key] = value;
-        });
+    if (sendRightAway) {
+        searchStories(paramMap)
+    }
+}
 
-        window.history.replaceState(null, "", origin + "/topic/241520/187482375/1/Search-Page/" + searchString);
+function searchStories(paramMap) {
+    let formData = new FormData(document.getElementById('bff-search-form'));
+    let searchString = "";
 
-        content.fetch(`${settings.url}/stories`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify(postObject)
-        }).then(async res => {
-            if (res.body) {
-                return res.json();
+    let postObject = {};
+    paramMap.forEach(key => {
+        let value = formData.get(key);
+        console.log(key, value);
+        searchString += encodeURI(value) + '/';
+        postObject[key] = value;
+    });
+
+    window.history.pushState(null, "", origin + "/topic/241520/187482375/1/Search-Page/" + searchString);
+
+    content.fetch(`${settings.url}/stories`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(postObject)
+    }).then(async res => {
+        if (res.body) {
+            return res.json();
+        }
+        return [];
+    }).then(val => {
+        document.getElementById('bff-search-result').innerHTML = `<hr size="1" noshade="">`;
+        
+        if (val.count == 0) {
+            document.getElementById('bff-search-result').innerHTML = `
+                <div class="panel_normal">
+                    <span class="gui_normal">
+                        No result found matching your search.
+                    </span>
+                </div>`
+            return;
+        }
+
+        let maxPages = Math.ceil(val.total / val.limit);
+
+        let paginationString = val.total + ' | ';
+        if (val.page >= 2) {
+            paginationString +=`<a onclick=document.getElementById('bff-page').value=${Number(val.page) - 1};document.getElementById('bff-search-button-hidden').click()>« Prev</a> `;
+        }
+        paginationString += 'Page '
+        if (val.page >= 2) {
+            paginationString +=`<a onclick=document.getElementById('bff-page').value=1;document.getElementById('bff-search-button-hidden').click()>1</a> `;
+        }
+        if (val.page >= 3) {
+            paginationString += '.. ';
+        }
+        if (val.page >= 12) {
+            paginationString +=`<a onclick=document.getElementById('bff-page').value=${Number(val.page) - 10};document.getElementById('bff-search-button-hidden').click()>${Number(val.page) - 10}</a> `;
+        }
+        for (let i = val.page - 3; i <= Number(val.page) + 3; i++) {
+            if (i >= 2 && i != val.page && i < maxPages) {
+                paginationString +=`<a onclick=document.getElementById('bff-page').value=${i};document.getElementById('bff-search-button-hidden').click()>${i}</a> `;
             }
-            return [];
-        }).then(val => {
-            document.getElementById('bff-search-result').innerHTML = "";
+            if (i == val.page) {
+                paginationString += `<b>${val.page}</b> `;
+            }
+        }
+        
+        if (val.page < maxPages - 10) {
+            paginationString +=`<a onclick=document.getElementById('bff-page').value=${Number(val.page) + 10};document.getElementById('bff-search-button-hidden').click()>${Number(val.page) + 10}</a> `;
+        }
+        if (val.page < maxPages - 1) {
+            paginationString +=`.. <a onclick=document.getElementById('bff-page').value=${maxPages};document.getElementById('bff-search-button-hidden').click()>Last</a> `;
+        }
+        if (val.page < maxPages) {
+            paginationString +=`<a onclick=document.getElementById('bff-page').value=${Number(val.page) + 1};document.getElementById('bff-search-button-hidden').click()>Next »</a> `;
+        }
 
-            document.getElementById('bff-search-pagination').innerHTML = `
-                ${val[0].count} | Page  <b>1</b>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=2">2</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=3">3</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=4">4</a>  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=11">11</a>  ..  <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=12134">Last</a> <a href="/anime/Naruto/?&amp;srt=1&amp;r=103&amp;p=2">Next »</a>`;
+        document.getElementsByClassName('bff-search-pagination')[0].innerHTML = paginationString;
 
-            console.log(val);
-            val.forEach(story => document.getElementById('bff-search-result').appendChild(createStory(story)));
-        });
-    }; 
+        if (val.count < 10) {
+            document.getElementById('bff-pagination-bottom').hidden = true;
+        }
+        document.getElementById('bff-pagination-bottom').innerHTML = paginationString;
+
+        val.stories.forEach(story => document.getElementById('bff-search-result').appendChild(createStory(story)));
+    });
 }
 
 function createStory(data) {
@@ -317,12 +398,24 @@ function createStory(data) {
     <div class="z-list zhover zpointer" style="min-height:77px;border-bottom:1px #cdcdcd solid;">
         <a class="stitle" href="/s/${data.id}">
             <img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="${data.image_id ? '/image/'+data.image_id+'/75/' : '/static/images/d_60_90.jpg'}" width="50" height="66">
-                ${data.title}
+            ${data.title}
         </a>
         ${data.chapters > 1 ? '<a href="/s/' + data.id +'/'+ data.chapters + '"><span class="icon-chevron-right xicon-section-arrow"></span></a>' : ''}
           by <a href="/u/${data.author_id}">${data.author_name}</a>  ${data.reviews > 0 ? '<a class="reviews" href="/r/'+ data.id +'/">reviews</a>' : ''}
         <div class="z-indent z-padtop">${data.description}
-            <div class="z-padtop2 xgray">Rated: ${data.rating} - English ${data.genreA ? ' - ' + data.genreA : ''}${data.genreB ? '/' + data.genreB : ''} - Chapters: ${data.chapters} - Words: ${data.words} ${data.reviews > 0 ? '- Reviews: ' + data.reviews : ''} ${data.favs > 0 ? '- Favs: ' + data.favs : ''} ${data.follows > 0 ? '- Follows: ' + data.follows : ''} - Updated: <span data-xutime="1739367008">23h ago</span> - Published: <span data-xutime="1723634397">Aug 14, 2024</span> - Naruto U., Ino Y., Hinata H., Tayuya${data.completed ? ' - Complete':''}</div>
+            <div class="z-padtop2 xgray">
+                Rated: ${data.rating} - ${data.language} 
+                ${data.genreA ? ' - ' + data.genreA : ''}${data.genreB ? '/' + data.genreB : ''} - 
+                Chapters: ${data.chapters} - 
+                Words: ${data.words} 
+                ${data.reviews > 0 ? '- Reviews: ' + data.reviews : ''} 
+                ${data.favs > 0 ? '- Favs: ' + data.favs : ''} 
+                ${data.follows > 0 ? '- Follows: ' + data.follows : ''} - 
+                ${data.updated > 0 ? 'Updated: <span data-xutime="' + data.updated + '">' + unixToReadable(data.published) + '</span> -' : ''} 
+                Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span> - 
+                Naruto U., Ino Y., Hinata H., Tayuya
+                ${data.completed ? ' - Complete':''}
+            </div>
         </div>
     </div>
     `;
@@ -408,3 +501,30 @@ let main = function() {
         }
     });
 }();
+
+/**
+ * @param {Number} unixTime
+ * @return {String}
+ */
+function unixToReadable(unixTime) {
+    let d = new Date(unixTime * 1000);
+    let now = new Date();
+    let diff = new Date(now - d);
+
+    let minutesAgo = Math.floor(diff / 1000 / 60);
+    let hoursAgo = Math.floor(minutesAgo / 60);
+
+    if (minutesAgo < 60) {
+        return `${minutesAgo}m ago`;
+    }
+
+    if (hoursAgo < 24) {
+        return `${hoursAgo}h ago`;
+    }
+
+    if (d.getFullYear() == now.getFullYear()) {
+        return d.toLocaleString('en-us',{month:'short', day: 'numeric'})
+    }
+
+    return diff.toString();
+}

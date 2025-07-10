@@ -51,6 +51,30 @@ function b64_to_utf8( str ) {
     return decodeURIComponent(escape(atob( str )));
 }
 
+/**
+ * @param {number} val
+ * @param {number} min
+ * @param {number} max
+ * @returns {number}
+ */
+function clamp(val, min, max) {
+    if (val > max) {
+        return max;
+    }
+    if (val < min) {
+        return min;
+    }
+    return val;
+}
+
+/**
+ * @param {string} date
+ * @returns {number}
+ */
+function dateStringToUnix(date) {
+    return Math.floor(new Date(date).getTime() / 1000)
+}
+
 module.exports = {
     initLogging,
     log,
@@ -58,5 +82,7 @@ module.exports = {
     warn,
     error,
     utf8_to_b64,
-    b64_to_utf8
+    b64_to_utf8,
+    clamp,
+    dateStringToUnix
 }

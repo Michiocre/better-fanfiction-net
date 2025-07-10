@@ -85,3 +85,21 @@ select.bff-input {
 .bff-input {
     width: 400px;
 }
+
+.bff-search-pagination a {
+    cursor: pointer;
+}
+
+#bff-search-button-hidden {
+    display: none;
+}
+
+.panel_normal {
+    margin-top: 1rem;
+    background: #F6F7EE;
+    color: #000000;
+    padding: 10px;
+    border: 1px outset;
+    margin-bottom: 5px;
+    text-align: left;
+}
