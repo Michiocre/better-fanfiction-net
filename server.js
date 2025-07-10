@@ -11,12 +11,12 @@ const db = require('./src/sqlite');
 const corsOptions = {
     origin: 'https://www.fanfiction.net',
     methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type'], // ← this is required
     optionsSuccessStatus: 200
 }
 app.use(cors(corsOptions));
-app.use(express.json({limit: '50mb'}));
-
 app.options('*', cors(corsOptions)); // Enable preflight across-the-board
+app.use(express.json({limit: '50mb'}));
 
 async function main() {
     utils.initLogging();
