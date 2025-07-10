@@ -227,8 +227,11 @@ function appendOverlay() {
 }
 
 function loadSearchPage() {
-    let params = window.location.href.split('Search-Page/')[1].split('/').map(el => decodeURI(el));
-    console.log(params);
+    let urlParts = window.location.href.split('Search-Page/');
+    let params = ["","","","",""];
+    if (urlParts.length > 1) {
+        params = urlParts[1].split('/').map(el => decodeURI(el));
+    }
     document.getElementById('content_wrapper_inner').innerHTML = `
         <form id="bff-search-form">
             <div class="bff-form-container">

@@ -85,7 +85,7 @@ async function main() {
         res.status(200).send(await db.getStories(params));
     });
 
-    app.post('/stories/status', async (req, res) => {
+    app.post('/stories/status', cors(corsOptions), async (req, res) => {
         let ids = req.body.ids;
         let stories = [];
         if (ids) {
