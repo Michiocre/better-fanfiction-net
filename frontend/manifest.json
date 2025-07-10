@@ -21,6 +21,6 @@
     ],
     "permissions": [
         "http://localhost/*",
-        "https://michiocre.myaddr.io/betterff/*"
+        "https://betterff.michiocre.duckdns.org/*"
     ]
 }
