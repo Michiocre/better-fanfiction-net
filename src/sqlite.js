@@ -1,3 +1,7 @@
+/**
+ * @import {Story, StoryParams} from "../types.js"
+ */
+
 const sqlite3 = require("better-sqlite3");
 const utils = require('./utils');
 const path = require('path');
@@ -108,23 +112,35 @@ function init(filename) {
     let chars = new Set(characters);
     if (pairings) {
         for (let pair of pairings) {
-            chars.add(pair[0]);
-            chars.add(pair[1]);
+            for (let char of pair) {
+                chars.add(char);
+            }
         }
     }
 
     try {
-        const insert = db.prepare('INSERT OR IGNORE INTO character (name, fandom_id) VALUES(?, ?)');
+        const insert = db.prepare('INSERT OR IGNORE INTO character (name, fandom_id, crossover) VALUES(?, ?, ?)');
         const insertMany = db.transaction((chars, fandomId, xfandomId) => {
             for (const char of chars) {
-                insert.run(char, fandomId);
+                insert.run(char, fandomId, xfandomId == null ? 0 : 1);
                 if (xfandomId) {
-                    insert.run(char, xfandomId);
+                    insert.run(char, xfandomId,  xfandomId == null ? 0 : 1);
                 }
             }
         });
 
         insertMany(chars, fandomId, xfandomId);
+
+        const update = db.prepare('UPDATE OR IGNORE character SET crossover = ? WHERE name = ? AND fandom_id = ?');
+        const updateMany = db.transaction((chars, fandomId, xfandomId) => {
+            for (const char of chars) {
+                if (!xfandomId) {
+                    update.run(0, char, fandomId);
+                }
+            }
+        });
+
+        updateMany(chars, fandomId, xfandomId);
     } catch (error) {
         utils.warn(error);
         return -1;
@@ -133,7 +149,11 @@ function init(filename) {
     return 0;
 };
 
- function saveStories(stories) {
+/**
+ * @param {Array<Story>} stories 
+ * @returns 
+ */
+function saveStories(stories) {
     if (!db) {
         throw Error('Database connection has not been established')  
     }
@@ -151,9 +171,8 @@ function init(filename) {
     }
 
     let saved = [];
-
     
-    const storyTransaction = db.transaction( (story) => {
+    const storyTransaction = db.transaction( (/**@type {Story}*/ story) => {
         try {
             let fandom = typeof story.fandom == 'number' ? {id: story.fandom} : getFandomByName(story.fandom, story.xfandom);
             let xfandom = typeof story.xfandom == 'number' ? {id: story.xfandom} : getFandomByName(story.xfandom);
@@ -166,15 +185,18 @@ function init(filename) {
                 utils.warn('Could not find xfandom, maybe try running getFandoms again: ', {name: story.xfandom});
                 return;
             }
-
             saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
 
-            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB, image_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB, story.image);
+            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, language, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB, image_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.language, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB, story.image);
             
-            const insertTexts = db.prepare('INSERT OR REPLACE INTO story_texts (id, title, description) VALUES(?, ?, ?)')
+            const delteTexts = db.prepare('DELETE FROM story_texts WHERE id = ?')
+            delteTexts.run(story.id);
+
+            const insertTexts = db.prepare('INSERT INTO story_texts (id, title, description) VALUES(?, ?, ?)')
             insertTexts.run(story.id, story.title, story.description);
 
+            /**@type {Array<[Number, Number]>} */
             let characters = [];
             for (let char of story.characters) {
                 let loadedChar =  getCharacterByNameAndFandom(char, fandom.id);
@@ -188,7 +210,7 @@ function init(filename) {
                     }
                 }
             }
-            
+
             for (let i = 0; i < story.pairings.length; i++) {
                 let pairCharacter = [];
                 for (let char of story.pairings[i]) {
@@ -279,14 +301,7 @@ function init(filename) {
 }
 
 /**
- * @param {Object} params - GetStoriesParameter
- * @param {string} params.title
- * @param {string} params.description
- * @param {string} params.datefrom
- * @param {string} params.dateuntil
- * @param {string} params.sort
- * @param {number} params.limit
- * @param {number} params.page
+ * @param {StoryParams} params
  * @returns {Array<any>}
  */
 function getStories(params) {
@@ -295,46 +310,95 @@ function getStories(params) {
     }
 
     let sortings = {
-        "relavance": "ORDER BY rank desc, coalesce(s.updated, s.published) desc",
-        "update": "ORDER BY coalesce(s.updated, s.published) desc, rank desc",
-        "published": "ORDER BY s.published desc, rank desc",
-        "reviews": "ORDER BY s.reviews desc, rank desc",
-        "favorites": "ORDER BY s.favs desc, rank desc",
-        "follows": "ORDER BY s.follows desc, rank desc",
-        "words": "ORDER BY s.words desc, rank desc",
+        "relavance": "ORDER BY rank asc",
+        "update": "ORDER BY coalesce(updated, published) desc, rank asc",
+        "publish": "ORDER BY published desc, rank asc",
+        "reviews": "ORDER BY reviews desc, rank asc",
+        "favorites": "ORDER BY favs desc, rank asc",
+        "follows": "ORDER BY follows desc, rank asc",
+        "words": "ORDER BY words desc, rank asc",
     }
 
-    let searchString = `SELECT s.*, st.title, st.description, count(*) over() as count, a.name as author_name
-        FROM story s
-        JOIN story_texts st ON s.id = st.id
-        JOIN author a ON s.author_id = a.id
-        WHERE 1 == 1
-        ${params?.title != '' ? 'AND st.title MATCH $title' : ''}
-        ${params?.description != '' ? 'AND st.description MATCH $description' : ''}
-        ${params?.datefrom != '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
-        ${params?.dateuntil != '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
+    let searchString = `
+        SELECT res.*
+            , highlight(story_texts, 1, '<b>', '</b>') as title
+            , highlight(story_texts, 2, '<b>', '</b>') as description
+        FROM (
+            SELECT s.*
+                , count(*) over() as count
+                , a.name as author_name
+                , f.name as fandom
+                , fx.name as xfandom
+                , rank
+            FROM story s
+            JOIN story_texts st ON s.id = st.id
+            JOIN author a ON s.author_id = a.id
+            JOIN fandom f ON s.fandom_id = f.id
+            LEFT JOIN fandom fx ON s.xfandom_id = fx.id
+            WHERE 1 == 1
+                ${params?.title != '' ? "AND story_texts MATCH $title" : ''}
+                ${params?.description != '' ? 'AND story_texts MATCH $description' : ''}
+                ${params?.datefrom != '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
+                ${params?.dateuntil != '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
 
+            ${sortings[params.sort] ?? sortings["relavance"]}
+            LIMIT $limit OFFSET $offset
+        ) as res
+        JOIN story_texts ht ON ht.id = res.id
+        WHERE 1 == 1
+            ${params?.title != '' ? "AND story_texts MATCH $title" : ''}
+            ${params?.description != '' ? 'AND story_texts MATCH $description' : ''}
         ${sortings[params.sort] ?? sortings["relavance"]}
-        LIMIT $limit OFFSET $offset`;
+        ;`;
 
     const stmt = db.prepare(searchString);
 
     let offset = (params.page - 1) * (params.limit) ?? 0;
     
-    let stories = stmt.all({
-        limit: params.limit,
-        offset: offset,
-        title: params.title ?? '',
-        description: params.description ?? '',
-        datefrom: utils.dateStringToUnix(params.datefrom),
-        dateuntil: utils.dateStringToUnix(params.dateuntil)
-    });
+    /**@type {Array<Story>} */
+    let stories;
+    
+    try {
+        stories = stmt.all({
+            limit: params.limit,
+            offset: offset,
+            title: 'title:' + params.title ?? '',
+            description: 'description:' + params.description ?? '',
+            datefrom: utils.dateStringToUnix(params.datefrom),
+            dateuntil: utils.dateStringToUnix(params.dateuntil)
+        });
+    } catch (err) {
+        console.log(err)
+        return {
+            error: `There was a error running your search, try wrapping the text searches in quotation marks. \n ${params?.title ? params?.title + ' -> "' + params?.title + '"' : ''}`,
+        }
+    }
 
     let total = stories[0]?.count ?? 0;
 
     if (total == 0 && offset > 0) {
         params.page = 1;
         return getStories(params);
+    }
+
+    for (const story of stories) {
+        story.characters = [];
+
+        let characters = getCharactersByStoryId(story.id);
+        let pairings = [];
+        for (const character of characters) {
+            if (character.pairing == 0) {
+                story.characters.push(character.name);
+            }
+            else {
+                if (!pairings[character.pairing]) {
+                    pairings[character.pairing] = [];
+                }
+                pairings[character.pairing].push(character.name);
+            }
+        }
+        pairings.shift()
+        story.pairings = pairings;
     }
 
     return {
@@ -346,7 +410,7 @@ function getStories(params) {
     } 
 }
 
- function getCommunitiesByStoryId(storyId) {
+function getCommunitiesByStoryId(storyId) {
     if (!db) {
         throw Error('Database connection has not been established')  
     }
@@ -394,13 +458,28 @@ function getStories(params) {
     return stmt.get(name, name2, name3, name4);
 }
 
- function getCharacterByNameAndFandom(name, fandom_id) {
+function getCharacterByNameAndFandom(name, fandom_id) {
     if (!db) {
         throw Error('Database connection has not been established')  
     }
 
     const stmt = db.prepare('SELECT * FROM character WHERE name = ? AND fandom_id = ?');
     return stmt.get([name, fandom_id]);
+}
+
+/**
+ * @param {Number} storyId 
+ * @returns {Object}
+ */
+function getCharactersByStoryId(storyId) {
+    const stmt = db.prepare(`
+        SELECT DISTINCT c.name, sc.pairing
+        FROM story_character sc
+        INNER JOIN character c
+            ON sc.character_id = c.id
+        WHERE sc.story_id = ?
+        ORDER BY c.name`);
+    return stmt.all(storyId);
 }
 
 

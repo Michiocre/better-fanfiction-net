@@ -94,7 +94,7 @@ select.bff-input {
     display: none;
 }
 
-.panel_normal {
+.panel {
     margin-top: 1rem;
     background: #F6F7EE;
     color: #000000;
@@ -102,4 +102,16 @@ select.bff-input {
     border: 1px outset;
     margin-bottom: 5px;
     text-align: left;
+}
+
+.gui_error {
+    color: red;
+}
+
+.gui_warning {
+    color: #E56717;
+}
+
+.gui_success {
+    color: green;
 }

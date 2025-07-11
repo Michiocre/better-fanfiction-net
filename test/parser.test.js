@@ -365,6 +365,34 @@ describe('parser parseSearchPage', () => {
             xfandom: "Mobile Suit Gundam: Iron-Blooded Orphans"
         }]);
     });
+    it ('should parse a search result with boldness', () => {
+        expect(parser.parseSearchPage('https://www.fanfiction.net/search/?keywords=harry&ready=1&type=story', [`<span id="bff-span-13174635" class="bff-span bff-loading" time="1547104922">loading</span><a class="stitle" href="/s/13174635/1/Harry"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/5617160/75/" data-original="/image/5617160/75/" width="50" height="66"><b>Harry</b></a>  by <a href="/u/10891425/FusionFlurry">FusionFlurry</a>  <a class="reviews" href="/r/13174635/">reviews</a>
+            <div class="z-indent z-padtop"><b>Harry</b> <b>harry</b> <b>harry</b><div class="z-padtop2 xgray">Harry Potter - Rated: K - English - Humor - Chapters: 1 - Words: 29 - Reviews: 10 - Favs: 1 - Published: <span data-xutime="1547104922">Jan 10, 2019</span></div></div>`
+        ], '', '', '')).to.eql([{ 
+            id: 13174635,
+            image: 5617160,
+            title: 'Harry',
+            author: { id: 10891425, name: 'FusionFlurry' },
+            description: 'Harry harry harry',
+            fandom: 'Harry Potter',
+            xfandom: null,
+            rated: 'K',
+            language: 'English',
+            genreA: 'Humor',
+            genreB: null,
+            chapters: 1,
+            words: 29,
+            reviews: 10,
+            favs: 1,
+            follows: 0,
+            updated: null,
+            published: 1547104922,
+            pairings: [],
+            characters: [],
+            completed: false,
+            community: null
+        }]);
+    });
 });
 
 describe('parser parseUserPage', () => {

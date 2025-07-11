@@ -144,6 +144,8 @@ function parseSearchDivHeader(content) {
 }
 
 function parseSearchDiv(content) {
+    content = content.replaceAll('<b>', '');
+    content = content.replaceAll('</b>', '');
     let lines = content.split('\n');
 
     let headerData = parseSearchDivHeader(lines.shift());
@@ -243,5 +245,6 @@ module.exports = {
     parseSearchDivData,
     parseCommunityDiv,
     parseSearchPage,
-    parseUserPage
+    parseUserPage,
+    parseSearchDivHeader
 }

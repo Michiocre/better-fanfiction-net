@@ -11,7 +11,7 @@ const db = require('./src/sqlite');
 const corsOptions = {
     origin: 'https://www.fanfiction.net',
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type'], // ← this is required
+    allowedHeaders: ['Content-Type'],
     optionsSuccessStatus: 200
 }
 app.use(cors(corsOptions));

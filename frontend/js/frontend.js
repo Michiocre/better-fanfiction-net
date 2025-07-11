@@ -1,6 +1,16 @@
-function sendStories(spans, communityId) {
-    let htmlEl = Array.from(document.getElementsByClassName('z-list'));
-    htmlEl = htmlEl.filter(el => el.firstChild.classList.contains('bff-error') || el.firstChild.classList.contains('bff-warning'));
+/**
+ * @import {Story, StoryParams} from "../../types.js"
+ */
+
+/**
+ * 
+ * @param {Array<HTMLSpanElement>} spans 
+ * @param {Number} communityId 
+ * @param {Boolean} forced 
+ */
+function sendStories(spans, communityId, forced) {
+    let htmlEl = spans.map(el => el.parentElement);
+    htmlEl = htmlEl.filter(el => forced || el.firstChild.classList.contains('bff-error') || el.firstChild.classList.contains('bff-warning'));
 
     for (let el of htmlEl) {
         el.firstChild.classList.remove('bff-error');
@@ -145,6 +155,8 @@ function handleFandomLoader() {
                 status = 'outdated';
             } else if (val.count == fandoms.length) {
                 status = 'loaded';
+            } else if (val.count > fandoms.length) {
+                status = 'outdated'
             }
 
             switch (status) {
@@ -245,7 +257,6 @@ function loadSearchPage() {
             sendRightAway = true;
         }
     }
-    console.log(params);
     document.getElementById('content_wrapper_inner').innerHTML = `
         <form id="bff-search-form">
             <div class="bff-form-container">
@@ -259,11 +270,11 @@ function loadSearchPage() {
                     <input class="bff-input" type="text" name="description" placeholder="Description" value="${params.description}"></input>
                 </div>
                 <div class="bff-row">
-                    <label class="bff-label">Date from</label>
+                    <label class="bff-label">Last Update after</label>
                     <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" value="${params.datefrom}"></input>
                 </div>
                 <div class="bff-row">
-                    <label class="bff-label">Date until</label>
+                    <label class="bff-label">Last Update before</label>
                     <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" value="${params.dateuntil}"></input>
                 </div>
                 <div class="bff-row">
@@ -315,7 +326,6 @@ function searchStories(paramMap) {
     let postObject = {};
     paramMap.forEach(key => {
         let value = formData.get(key);
-        console.log(key, value);
         searchString += encodeURI(value) + '/';
         postObject[key] = value;
     });
@@ -334,17 +344,29 @@ function searchStories(paramMap) {
         }
         return [];
     }).then(val => {
-        document.getElementById('bff-search-result').innerHTML = `<hr size="1" noshade="">`;
+        if (val.error) {
+            document.getElementById('bff-search-result').innerHTML = `
+            <div class="panel">
+            <span class="gui_error">
+            ${val.error}
+            ${JSON.stringify(val.details)}
+            </span>
+            </div>`
+            return;
+        }
         
         if (val.count == 0) {
             document.getElementById('bff-search-result').innerHTML = `
-                <div class="panel_normal">
-                    <span class="gui_normal">
-                        No result found matching your search.
-                    </span>
-                </div>`
+            <div class="panel">
+            <span class="gui_normal">
+            No result found matching your search.
+            </span>
+            </div>`
             return;
         }
+        console.log(val.stories.map(el => el.rank));
+        
+        document.getElementById('bff-search-result').innerHTML = `<hr size="1" noshade="">`;
 
         let maxPages = Math.ceil(val.total / val.limit);
 
@@ -369,6 +391,10 @@ function searchStories(paramMap) {
             if (i == val.page) {
                 paginationString += `<b>${val.page}</b> `;
             }
+
+            if (i == maxPages && i-1 == val.page) {
+                paginationString +=`<a onclick=document.getElementById('bff-page').value=${i};document.getElementById('bff-search-button-hidden').click()>${i}</a> `;
+            }
         }
         
         if (val.page < maxPages - 10) {
@@ -392,8 +418,35 @@ function searchStories(paramMap) {
     });
 }
 
+/**
+ * 
+ * @param {Story} data
+ * @returns {HTMLDivElement}
+ */
 function createStory(data) {
     let story = document.createElement("div");
+
+    let parts = [];
+    if (!data.xfandom) {
+        parts.push(data.fandom);
+    } else {
+        parts.push('Crossover');
+        parts.push([data.fandom, data.xfandom].join(' & '));
+    }
+    parts.push(`Rated: ${data.rating}`);
+    parts.push(data.language);
+    data.genreA && !data.genreB && parts.push(data.genreA);
+    data.genreA && data.genreB && parts.push([data.genreA, data.genreB].join('/'));
+    parts.push(`Chapters: ${data.chapters}`);
+    parts.push(`Words: ${data.words}`);
+    data.reviews > 0 && parts.push(`Reviews: ${data.reviews}`);
+    data.favs > 0 && parts.push(`Favs: ${data.favs}`);
+    data.follows > 0 && parts.push(`Follows: ${data.follows}`);
+    data.updated > 0 && parts.push(`Updated: <span data-xutime="${data.updated}">${unixToReadable(data.updated)}</span>`);
+    parts.push(`Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span>`);
+    (data.pairings.length > 0 || data.characters.length > 0) && parts.push(`${data.pairings.map(pair => '[' + pair.join(', ') + ']').join(' ')} ${data.characters.join(', ')}`);
+    data.completed && parts.push(`Complete`);
+
     story.innerHTML = `
     <div class="z-list zhover zpointer" style="min-height:77px;border-bottom:1px #cdcdcd solid;">
         <a class="stitle" href="/s/${data.id}">
@@ -404,17 +457,7 @@ function createStory(data) {
           by <a href="/u/${data.author_id}">${data.author_name}</a>  ${data.reviews > 0 ? '<a class="reviews" href="/r/'+ data.id +'/">reviews</a>' : ''}
         <div class="z-indent z-padtop">${data.description}
             <div class="z-padtop2 xgray">
-                Rated: ${data.rating} - ${data.language} 
-                ${data.genreA ? ' - ' + data.genreA : ''}${data.genreB ? '/' + data.genreB : ''} - 
-                Chapters: ${data.chapters} - 
-                Words: ${data.words} 
-                ${data.reviews > 0 ? '- Reviews: ' + data.reviews : ''} 
-                ${data.favs > 0 ? '- Favs: ' + data.favs : ''} 
-                ${data.follows > 0 ? '- Follows: ' + data.follows : ''} - 
-                ${data.updated > 0 ? 'Updated: <span data-xutime="' + data.updated + '">' + unixToReadable(data.published) + '</span> -' : ''} 
-                Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span> - 
-                Naruto U., Ino Y., Hinata H., Tayuya
-                ${data.completed ? ' - Complete':''}
+                ${parts.join(' - ')}
             </div>
         </div>
     </div>
@@ -469,8 +512,12 @@ let main = function() {
         newEl.classList.add('bff-span');
         newEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime'));
         newEl.onclick = function (el) {
-            if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
-                sendStories(spans, communityId);
+            document.body.onclick = function (e) {
+                if (e.ctrlKey) {
+                    sendStories([newEl], communityId, true);
+                } else if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
+                    sendStories(spans, communityId, false);
+                }
             }
         }
         storyEl.insertBefore(newEl, storyEl.firstChild);
@@ -526,5 +573,5 @@ function unixToReadable(unixTime) {
         return d.toLocaleString('en-us',{month:'short', day: 'numeric'})
     }
 
-    return diff.toString();
+    return d.toLocaleString('en-us',{month:'short', day: 'numeric', year: 'numeric'});
 }
