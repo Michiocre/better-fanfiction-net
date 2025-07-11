@@ -22,7 +22,7 @@ function init(filename) {
         throw Error('Database connection has not been established')  
     }
     try {
-        const insert = db.prepare('INSERT OR IGNORE INTO fandom (id, name, category) VALUES(?, ?, ?)');
+        const insert = db.prepare('INSERT OR REPLACE INTO fandom (id, name, category) VALUES(?, ?, ?)');
 
         const insertMany = db.transaction((fandoms) => {
             for (const fandom of fandoms) {
@@ -143,9 +143,9 @@ function init(filename) {
         ...new Map(authors.map(obj => [obj.id, obj]))
         .values()
     ];
-     saveAuthors(authors);
+    saveAuthors(authors);
 
-    let community = stories[0].community;
+    let community = stories[0]?.community;
     if (community) {
          saveCommunity(community);
     }
@@ -188,19 +188,20 @@ function init(filename) {
                     }
                 }
             }
-            for (let i = 1; i < story.pairings.length; i++) {
+            
+            for (let i = 0; i < story.pairings.length; i++) {
                 let pairCharacter = [];
                 for (let char of story.pairings[i]) {
                     let loadedChar =  getCharacterByNameAndFandom(char, fandom.id);
-                if (loadedChar) {
-                    characters.push([loadedChar.id, i]);
-                }
-                if (xfandom) {
-                    let loadedChar =  getCharacterByNameAndFandom(char, xfandom.id);
                     if (loadedChar) {
-                        characters.push([loadedChar.id, i]);
+                        characters.push([loadedChar.id, i+1]);
                     }
-                }
+                    if (xfandom) {
+                        let loadedChar =  getCharacterByNameAndFandom(char, xfandom.id);
+                        if (loadedChar) {
+                            characters.push([loadedChar.id, i+1]);
+                        }
+                    }
                 }
                 characters = characters.concat(pairCharacter);
             }
