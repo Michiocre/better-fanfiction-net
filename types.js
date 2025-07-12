@@ -30,4 +30,4 @@
  * @prop {number} page
  */
 
-export const Types = {}
+export const Types = {};
