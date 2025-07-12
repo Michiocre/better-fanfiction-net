@@ -71,7 +71,7 @@ function saveCommunity(community) {
         throw Error('Database connection has not been established');
     }
 
-    let fandom = typeof community.fandom == 'number' ? {id: community.fandom} : getFandomByName(community.fandom);
+    let fandom = typeof community.fandom === 'number' ? {id: community.fandom} : getFandomByName(community.fandom);
 
     if (!fandom) {
         utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
@@ -172,8 +172,8 @@ function saveStories(stories) {
     
     const storyTransaction = db.transaction((/**@type {Story}*/ story) => {
         try {
-            let fandom = typeof story.fandom == 'number' ? { id: story.fandom } : getFandomByName(story.fandom, story.xfandom);
-            let xfandom = typeof story.xfandom == 'number' ? { id: story.xfandom } : getFandomByName(story.xfandom);
+            let fandom = typeof story.fandom === 'number' ? { id: story.fandom } : getFandomByName(story.fandom, story.xfandom);
+            let xfandom = typeof story.xfandom === 'number' ? { id: story.xfandom } : getFandomByName(story.xfandom);
 
             if (!fandom) {
                 utils.warn('Could not find fandom, maybe try running getFandoms again: ', { name: story.fandom });

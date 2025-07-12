@@ -154,7 +154,7 @@ function parseSearchDiv(content) {
 }
 
 function parseCommunityDiv(content) {
-    let pattern = new RegExp(/^.*arrow".*?> ([^<>]+), Since: ([\d\-]+).*?Founder: <a href="\/u\/(\d+).*?>(.*?)<.+? Stories: ([\d,]+) - Followers: ([\d,]+).*?id: ([\d,]+).*?<ol>(.*?)<\/ol>.*?<div>(.*?)<\/div>.*?$/gs);
+    let pattern = new RegExp(/^.*arrow".*?> ([^<>]+), Since: ([\d-]+).*?Founder: <a href="\/u\/(\d+).*?>(.*?)<.+? Stories: ([\d,]+) - Followers: ([\d,]+).*?id: ([\d,]+).*?<ol>(.*?)<\/ol>.*?<div>(.*?)<\/div>.*?$/gs);
     let data = pattern.exec(content);
 
     let staffStrings = data[8].split('</li>');

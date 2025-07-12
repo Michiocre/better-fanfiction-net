@@ -20,6 +20,10 @@
             "recommended": true,
             "style": {
                 "useConst": "off"
+            },
+            "correctness": {
+                "noUnusedVariables": "off",
+                "noUnusedFunctionParameters": "off"
             }
         }
     },

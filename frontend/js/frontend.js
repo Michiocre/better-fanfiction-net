@@ -109,7 +109,7 @@ function handleFandomLoader() {
 
     let fandoms = [];
     for (let cat of categories) {
-        fandoms = fandoms.concat(Array.from(document.getElementById('cat_' + cat.id).firstChild.children).map(foption => {
+        fandoms = fandoms.concat(Array.from(document.getElementById(`cat_${cat.id}`).firstChild.children).map(foption => {
             return {
                 id: foption.value,
                 category: cat.name,
@@ -118,7 +118,7 @@ function handleFandomLoader() {
         }).filter(f => f.id >= 0));
     }
 
-    newEl.onclick = function (el) {
+    newEl.onclick = (el) => {
         if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
             let list = document.getElementsByClassName('bff-span');
             newEl.classList.remove('bff-error');
@@ -134,7 +134,7 @@ function handleFandomLoader() {
                 },
                 body: JSON.stringify({elements: fandoms}),
             }).then(res => {
-                if (res.status == 200) {
+                if (res.status === 200) {
                     newEl.classList.remove('bff-error');
                     newEl.classList.remove('bff-warning');
                     newEl.classList.add('bff-success');
@@ -483,7 +483,7 @@ function createStory(data) {
     return story;
 }
 
-let main = function() {
+function main() {
     if (window.location.pathname.startsWith('/selectcategory.php')) {
         return handleFandomLoader();
     }
@@ -573,7 +573,7 @@ let main = function() {
             }
         }
     });
-}();
+}
 
 /**
  * @param {number} num
@@ -629,3 +629,5 @@ function unixToReadable(unixTime) {
 function utf8_to_b64(str) {
     return window.btoa(unescape(encodeURIComponent(str)));
 }
+
+main();
