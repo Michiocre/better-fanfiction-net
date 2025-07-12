@@ -11,7 +11,7 @@ html {
     position: relative;
 }
 
-.bff>span {
+.bff > span {
     cursor: pointer;
     margin-right: 10px;
     content: "";
@@ -22,11 +22,13 @@ html {
     padding: 3px 5px 2px 5px;
     font-size: smaller;
     color: transparent;
-    transition: max-width 0.2s, color 0.2s;
+    transition:
+        max-width 0.2s,
+        color 0.2s;
     overflow: hidden;
 }
 
-.bff>span:hover {
+.bff > span:hover {
     max-width: 100px;
     color: white;
 }
@@ -96,7 +98,7 @@ select.bff-input {
 
 .panel {
     margin-top: 1rem;
-    background: #F6F7EE;
+    background: #f6f7ee;
     color: #000000;
     padding: 10px;
     border: 1px outset;
@@ -109,7 +111,7 @@ select.bff-input {
 }
 
 .gui_warning {
-    color: #E56717;
+    color: #e56717;
 }
 
 .gui_success {

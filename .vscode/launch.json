@@ -5,18 +5,14 @@
             "type": "node",
             "request": "launch",
             "name": "Server.js",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}\\server.js"
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Migrate.js",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
+            "skipFiles": ["<node_internals>/**"],
             "program": "${workspaceFolder}\\db\\migrate.mjs",
             "args": ["1"]
         }

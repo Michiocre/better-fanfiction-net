@@ -1,13 +1,18 @@
-body, select, textarea, input {
+body,
+select,
+textarea,
+input {
     color: #e6edf3 !important;
 }
 
-body, .tcat, .btn {
+body,
+.tcat,
+.btn {
     background-color: #0d1117 !important;
 }
 
 .btn {
-    background-image: linear-gradient(to bottom,#010409,#0d1117);
+    background-image: linear-gradient(to bottom, #010409, #0d1117);
     color: #e6edf3 !important;
     border: 1px solid #242a30 !important;
     text-shadow: none !important;
@@ -21,33 +26,67 @@ a {
     color: orange !important;
 }
 
-.caret {border-top-color: #e6edf3 !important;}
+.caret {
+    border-top-color: #e6edf3 !important;
+}
 
-.menulink, .menulink > a {
+.menulink,
+.menulink > a {
     color: #e6edf3 !important;
 }
 
-.dropdown-menu > li > a:hover {color: #e6edf3 !important;}
+.dropdown-menu > li > a:hover {
+    color: #e6edf3 !important;
+}
 
-#content_wrapper, .zmenu, .dropdown-menu, .dropdown-menu .divider, textarea, input, .lc, .lc-wrapper::after, .z-list, hr, img, select, .modal, .modal-footer, .bff-overlay, .panel_normal, table, .nav-tabs > .active > a   {
+#content_wrapper,
+.zmenu,
+.dropdown-menu,
+.dropdown-menu .divider,
+textarea,
+input,
+.lc,
+.lc-wrapper::after,
+.z-list,
+hr,
+img,
+select,
+.modal,
+.modal-footer,
+.bff-overlay,
+.panel_normal,
+table,
+.nav-tabs > .active > a {
     background-color: #010409 !important;
     border-color: #242a30 !important;
     box-shadow: none !important;
     color: #e6edf3 !important;
 }
 
-hr, .lc-left {
+hr,
+.lc-left {
     background: #242a30 !important;
 }
 
-#content_wrapper_inner, .tcat, .table-bordered, td, .topnav, th, thead, .nav-tabs {
+#content_wrapper_inner,
+.tcat,
+.table-bordered,
+td,
+.topnav,
+th,
+thead,
+.nav-tabs {
     border-color: #242a30 !important;
 }
 
-div > .zhover:hover, l.topnav ul li a:hover, ul.topnav ul li.active, ul.topnav ul li a:hover, ul.topnav ul li.active {
-    background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
+div > .zhover:hover,
+li.topnav ul li a:hover,
+ul.topnav ul li.active,
+ul.topnav ul li a:hover,
+ul.topnav ul li.active {
+    background-image: linear-gradient(to bottom, #0d1117, #010409) !important;
 }
 
-.table-striped tbody > tr:nth-child(2n+1) > td {
+.table-striped tbody > tr:nth-child(2n + 1) > td {
     background-color: #0d1117 !important;
 }

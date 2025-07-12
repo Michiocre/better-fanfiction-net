@@ -4,10 +4,10 @@ import { findMigrationFilenames, readMigrationFile } from 'migration-files';
 import { migrate } from '@blackglory/better-sqlite3-migrations';
 import Database from 'better-sqlite3';
 import 'dotenv/config';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, writeFileSync } from 'node:fs';
 
 if (!existsSync(process.env.DB_FILE)) {
-    writeFileSync(process.env.DB_FILE, "");
+    writeFileSync(process.env.DB_FILE, '');
 }
 
 const db = new Database(process.env.DB_FILE);

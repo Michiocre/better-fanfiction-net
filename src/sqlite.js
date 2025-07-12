@@ -2,16 +2,15 @@
  * @import {Story, StoryParams} from "../types.js"
  */
 
-const sqlite3 = require("better-sqlite3");
+const sqlite3 = require('better-sqlite3');
 const utils = require('./utils');
-const path = require('path');
-const fs = require('fs');
+const path = require('node:path');
 
 let db;
 
 function init(filename) {
     try {
-        let dbPath = path.resolve(__dirname, '..', filename);
+        const dbPath = path.resolve(__dirname, '..', filename);
         db = sqlite3(dbPath);
     } catch (error) {
         utils.log('Database file could not be found');
@@ -21,12 +20,14 @@ function init(filename) {
     db.pragma('journal_mode = WAL');
 }
 
- function saveFandoms(fandoms) {
+function saveFandoms(fandoms) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
     try {
-        const insert = db.prepare('INSERT OR REPLACE INTO fandom (id, name, category) VALUES(?, ?, ?)');
+        const insert = db.prepare(
+            'INSERT OR REPLACE INTO fandom (id, name, category) VALUES(?, ?, ?)',
+        );
 
         const insertMany = db.transaction((fandoms) => {
             for (const fandom of fandoms) {
@@ -44,13 +45,15 @@ function init(filename) {
     return 0;
 }
 
- function saveAuthors(authors) {
+function saveAuthors(authors) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
-    
+
     try {
-        const insert = db.prepare('INSERT OR REPLACE INTO author (id, name) VALUES(?, ?)');
+        const insert = db.prepare(
+            'INSERT OR REPLACE INTO author (id, name) VALUES(?, ?)',
+        );
 
         const insertMany = db.transaction((authors) => {
             for (const author of authors) {
@@ -65,31 +68,52 @@ function init(filename) {
     }
 
     return 0;
-};
+}
 
- function saveCommunity(community) {
+function saveCommunity(community) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
-    let fandom = typeof community.fandom == 'number' ? {id: community.fandom} : getFandomByName(community.fandom);
+    const fandom =
+        typeof community.fandom === 'number'
+            ? { id: community.fandom }
+            : getFandomByName(community.fandom);
 
     if (!fandom) {
-        utils.warn('Could not find fandom, maybe try running getFandoms again', community.fandom);
+        utils.warn(
+            'Could not find fandom, maybe try running getFandoms again',
+            community.fandom,
+        );
         return;
     }
 
     try {
-         saveAuthors([community.author, ...community.staff]);
+        saveAuthors([community.author, ...community.staff]);
 
         const insertMany = db.transaction((community) => {
-            const stmt = db.prepare('INSERT OR REPLACE INTO community (id, name, founder_id, focus_id, start_date, story_count, followers, description) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
-            stmt.run(community.id, community.name, community.author.id, fandom.id, community.start_date, community.story_count, community.follower, community.description);
-            
-            const delStmt = db.prepare('DELETE FROM community_author WHERE community_id =  ?');
+            const stmt = db.prepare(
+                'INSERT OR REPLACE INTO community (id, name, founder_id, focus_id, start_date, story_count, followers, description) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',
+            );
+            stmt.run(
+                community.id,
+                community.name,
+                community.author.id,
+                fandom.id,
+                community.start_date,
+                community.story_count,
+                community.follower,
+                community.description,
+            );
+
+            const delStmt = db.prepare(
+                'DELETE FROM community_author WHERE community_id =  ?',
+            );
             delStmt.run(community.id);
-            
-            const insert = db.prepare('INSERT OR IGNORE INTO community_author (community_id, author_id) Values(?, ?)');
+
+            const insert = db.prepare(
+                'INSERT OR IGNORE INTO community_author (community_id, author_id) Values(?, ?)',
+            );
             for (const author of [community.author, ...community.staff]) {
                 insert.run(community.id, author.id);
             }
@@ -104,34 +128,38 @@ function init(filename) {
     return 0;
 }
 
- function saveCharacters(characters, pairings, fandomId, xfandomId = null) {
+function saveCharacters(characters, pairings, fandomId, xfandomId = null) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
-    let chars = new Set(characters);
+    const chars = new Set(characters);
     if (pairings) {
-        for (let pair of pairings) {
-            for (let char of pair) {
+        for (const pair of pairings) {
+            for (const char of pair) {
                 chars.add(char);
             }
         }
     }
 
     try {
-        const insert = db.prepare('INSERT OR IGNORE INTO character (name, fandom_id, crossover) VALUES(?, ?, ?)');
+        const insert = db.prepare(
+            'INSERT OR IGNORE INTO character (name, fandom_id, crossover) VALUES(?, ?, ?)',
+        );
         const insertMany = db.transaction((chars, fandomId, xfandomId) => {
             for (const char of chars) {
-                insert.run(char, fandomId, xfandomId == null ? 0 : 1);
+                insert.run(char, fandomId, xfandomId === null ? 0 : 1);
                 if (xfandomId) {
-                    insert.run(char, xfandomId,  xfandomId == null ? 0 : 1);
+                    insert.run(char, xfandomId, xfandomId === null ? 0 : 1);
                 }
             }
         });
 
         insertMany(chars, fandomId, xfandomId);
 
-        const update = db.prepare('UPDATE OR IGNORE character SET crossover = ? WHERE name = ? AND fandom_id = ?');
+        const update = db.prepare(
+            'UPDATE OR IGNORE character SET crossover = ? WHERE name = ? AND fandom_id = ?',
+        );
         const updateMany = db.transaction((chars, fandomId, xfandomId) => {
             for (const char of chars) {
                 if (!xfandomId) {
@@ -147,64 +175,106 @@ function init(filename) {
     }
 
     return 0;
-};
+}
 
 /**
- * @param {Array<Story>} stories 
- * @returns 
+ * @param {Array<Story>} stories
+ * @returns
  */
 function saveStories(stories) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
-    let authors = stories.map(story => story.author);
-    authors = [
-        ...new Map(authors.map(obj => [obj.id, obj]))
-        .values()
-    ];
+    let authors = stories.map((story) => story.author);
+    authors = [...new Map(authors.map((obj) => [obj.id, obj])).values()];
     saveAuthors(authors);
 
-    let community = stories[0]?.community;
+    const community = stories[0]?.community;
     if (community) {
-         saveCommunity(community);
+        saveCommunity(community);
     }
 
-    let saved = [];
-    
-    const storyTransaction = db.transaction( (/**@type {Story}*/ story) => {
+    const saved = [];
+
+    const storyTransaction = db.transaction((/**@type {Story}*/ story) => {
         try {
-            let fandom = typeof story.fandom == 'number' ? {id: story.fandom} : getFandomByName(story.fandom, story.xfandom);
-            let xfandom = typeof story.xfandom == 'number' ? {id: story.xfandom} : getFandomByName(story.xfandom);
+            const fandom =
+                typeof story.fandom === 'number'
+                    ? { id: story.fandom }
+                    : getFandomByName(story.fandom, story.xfandom);
+            const xfandom =
+                typeof story.xfandom === 'number'
+                    ? { id: story.xfandom }
+                    : getFandomByName(story.xfandom);
 
             if (!fandom) {
-                utils.warn('Could not find fandom, maybe try running getFandoms again: ', {name: story.fandom});
+                utils.warn(
+                    'Could not find fandom, maybe try running getFandoms again: ',
+                    { name: story.fandom },
+                );
                 return;
             }
             if (story.xfandom && !xfandom) {
-                utils.warn('Could not find xfandom, maybe try running getFandoms again: ', {name: story.xfandom});
+                utils.warn(
+                    'Could not find xfandom, maybe try running getFandoms again: ',
+                    { name: story.xfandom },
+                );
                 return;
             }
-            saveCharacters(story.characters, story.pairings, fandom.id, xfandom?.id);
+            saveCharacters(
+                story.characters,
+                story.pairings,
+                fandom.id,
+                xfandom?.id,
+            );
 
-            const insert = db.prepare('INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, language, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB, image_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-            insert.run(story.id, story.author.id, fandom.id, xfandom?.id, story.rated, story.language, story.chapters, story.words, story.reviews, story.favs, story.follows, story.updated, story.published, story, story.completed?1:0, story.genreA, story.genreB, story.image);
-            
-            const delteTexts = db.prepare('DELETE FROM story_texts WHERE id = ?')
+            const insert = db.prepare(
+                'INSERT OR REPLACE INTO story (id, author_id, fandom_id, xfandom_id, rating, language, chapters, words, reviews, favs, follows, updated, published, completed, genreA, genreB, image_id) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+            );
+            insert.run(
+                story.id,
+                story.author.id,
+                fandom.id,
+                xfandom?.id,
+                story.rated,
+                story.language,
+                story.chapters,
+                story.words,
+                story.reviews,
+                story.favs,
+                story.follows,
+                story.updated,
+                story.published,
+                story,
+                story.completed ? 1 : 0,
+                story.genreA,
+                story.genreB,
+                story.image,
+            );
+
+            const delteTexts = db.prepare(
+                'DELETE FROM story_texts WHERE id = ?',
+            );
             delteTexts.run(story.id);
 
-            const insertTexts = db.prepare('INSERT INTO story_texts (id, title, description) VALUES(?, ?, ?)')
+            const insertTexts = db.prepare(
+                'INSERT INTO story_texts (id, title, description) VALUES(?, ?, ?)',
+            );
             insertTexts.run(story.id, story.title, story.description);
 
             /**@type {Array<[Number, Number]>} */
             let characters = [];
-            for (let char of story.characters) {
-                let loadedChar =  getCharacterByNameAndFandom(char, fandom.id);
+            for (const char of story.characters) {
+                const loadedChar = getCharacterByNameAndFandom(char, fandom.id);
                 if (loadedChar) {
                     characters.push([loadedChar.id, 0]);
                 }
                 if (xfandom) {
-                    let loadedChar =  getCharacterByNameAndFandom(char, xfandom.id);
+                    const loadedChar = getCharacterByNameAndFandom(
+                        char,
+                        xfandom.id,
+                    );
                     if (loadedChar) {
                         characters.push([loadedChar.id, 0]);
                     }
@@ -212,16 +282,22 @@ function saveStories(stories) {
             }
 
             for (let i = 0; i < story.pairings.length; i++) {
-                let pairCharacter = [];
-                for (let char of story.pairings[i]) {
-                    let loadedChar =  getCharacterByNameAndFandom(char, fandom.id);
+                const pairCharacter = [];
+                for (const char of story.pairings[i]) {
+                    const loadedChar = getCharacterByNameAndFandom(
+                        char,
+                        fandom.id,
+                    );
                     if (loadedChar) {
-                        characters.push([loadedChar.id, i+1]);
+                        characters.push([loadedChar.id, i + 1]);
                     }
                     if (xfandom) {
-                        let loadedChar =  getCharacterByNameAndFandom(char, xfandom.id);
+                        const loadedChar = getCharacterByNameAndFandom(
+                            char,
+                            xfandom.id,
+                        );
                         if (loadedChar) {
-                            characters.push([loadedChar.id, i+1]);
+                            characters.push([loadedChar.id, i + 1]);
                         }
                     }
                 }
@@ -229,11 +305,12 @@ function saveStories(stories) {
             }
 
             characters = [
-                ...new Map(characters.map(obj => [obj[0], obj]))
-                .values()
+                ...new Map(characters.map((obj) => [obj[0], obj])).values(),
             ];
 
-            const insertChars = db.prepare('INSERT OR REPLACE INTO story_character (story_id, character_id, pairing) VALUES (?, ?, ?)');
+            const insertChars = db.prepare(
+                'INSERT OR REPLACE INTO story_character (story_id, character_id, pairing) VALUES (?, ?, ?)',
+            );
             const insertManyChars = db.transaction((characters) => {
                 for (const char of characters) {
                     insertChars.run(story.id, char[0], char[1]);
@@ -243,7 +320,9 @@ function saveStories(stories) {
             insertManyChars(characters);
 
             if (community) {
-                const insertCommunity = db.prepare('INSERT OR REPLACE INTO story_community (story_id, community_id) VALUES (?, ?)');
+                const insertCommunity = db.prepare(
+                    'INSERT OR REPLACE INTO story_community (story_id, community_id) VALUES (?, ?)',
+                );
 
                 insertCommunity.run(story.id, community.id);
             }
@@ -256,47 +335,49 @@ function saveStories(stories) {
 
     for (const story of stories) {
         try {
-             storyTransaction(story);
+            storyTransaction(story);
         } catch (error) {
-            continue;
+            utils.log(error);
         }
     }
     return saved;
 }
 
- function getFandoms() {
+function getFandoms() {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
-    
+
     const stmt = db.prepare('SELECT * FROM `fandom`');
-    return stmt.all()
+    return stmt.all();
 }
 
- function getFandomCount() {
+function getFandomCount() {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
-    
+
     const stmt = db.prepare('SELECT COUNT(*) as count FROM `fandom`');
-    return stmt.get()
+    return stmt.get();
 }
 
- function getFandomsByCategory(category) {
+function getFandomsByCategory(category) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
     const stmt = db.prepare('SELECT * FROM `fandom` WHERE `category` = ?');
     return stmt.get(category);
 }
 
- function getStoryById(id) {
+function getStoryById(id) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
-    
-    const stmt = db.prepare('SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE s.id = ?');
+
+    const stmt = db.prepare(
+        'SELECT s.*, st.title, st.description FROM `story` s JOIN `story_texts` st ON s.id = st.id WHERE s.id = ?',
+    );
     return stmt.get(id);
 }
 
@@ -306,20 +387,20 @@ function saveStories(stories) {
  */
 function getStories(params) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
-    let sortings = {
-        "relavance": "ORDER BY rank asc",
-        "update": "ORDER BY coalesce(updated, published) desc, rank asc",
-        "publish": "ORDER BY published desc, rank asc",
-        "reviews": "ORDER BY reviews desc, rank asc",
-        "favorites": "ORDER BY favs desc, rank asc",
-        "follows": "ORDER BY follows desc, rank asc",
-        "words": "ORDER BY words desc, rank asc",
-    }
+    const sortings = {
+        relavance: 'ORDER BY rank asc',
+        update: 'ORDER BY coalesce(updated, published) desc, rank asc',
+        publish: 'ORDER BY published desc, rank asc',
+        reviews: 'ORDER BY reviews desc, rank asc',
+        favorites: 'ORDER BY favs desc, rank asc',
+        follows: 'ORDER BY follows desc, rank asc',
+        words: 'ORDER BY words desc, rank asc',
+    };
 
-    let searchString = `
+    const searchString = `
         SELECT res.*
             , highlight(story_texts, 1, '<b>', '</b>') as title
             , highlight(story_texts, 2, '<b>', '</b>') as description
@@ -335,48 +416,48 @@ function getStories(params) {
             JOIN author a ON s.author_id = a.id
             JOIN fandom f ON s.fandom_id = f.id
             LEFT JOIN fandom fx ON s.xfandom_id = fx.id
-            WHERE 1 == 1
-                ${params?.title != '' ? "AND story_texts MATCH $title" : ''}
-                ${params?.description != '' ? 'AND story_texts MATCH $description' : ''}
-                ${params?.datefrom != '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
-                ${params?.dateuntil != '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
+            WHERE 1 = 1
+                ${params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
+                ${params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
+                ${params?.datefrom !== '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
+                ${params?.dateuntil !== '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
 
-            ${sortings[params.sort] ?? sortings["relavance"]}
+            ${sortings[params.sort] ?? sortings.relavance}
             LIMIT $limit OFFSET $offset
         ) as res
         JOIN story_texts ht ON ht.id = res.id
-        WHERE 1 == 1
-            ${params?.title != '' ? "AND story_texts MATCH $title" : ''}
-            ${params?.description != '' ? 'AND story_texts MATCH $description' : ''}
-        ${sortings[params.sort] ?? sortings["relavance"]}
+        WHERE 1 = 1
+            ${params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
+            ${params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
+        ${sortings[params.sort] ?? sortings.relavance}
         ;`;
 
     const stmt = db.prepare(searchString);
 
-    let offset = (params.page - 1) * (params.limit) ?? 0;
-    
+    const offset = (params.page - 1) * params.limit ?? 0;
+
     /**@type {Array<Story>} */
     let stories;
-    
+
     try {
         stories = stmt.all({
             limit: params.limit,
             offset: offset,
-            title: 'title:' + params.title ?? '',
-            description: 'description:' + params.description ?? '',
+            title: `title:${params.title ?? ''}`,
+            description: `description:${params.description ?? ''}`,
             datefrom: utils.dateStringToUnix(params.datefrom),
-            dateuntil: utils.dateStringToUnix(params.dateuntil)
+            dateuntil: utils.dateStringToUnix(params.dateuntil),
         });
     } catch (err) {
-        console.log(err)
+        console.log(err);
         return {
-            error: `There was a error running your search, try wrapping the text searches in quotation marks. \n ${params?.title ? params?.title + ' -> "' + params?.title + '"' : ''}`,
-        }
+            error: `There was a error running your search, try wrapping the text searches in quotation marks. \n ${params?.title ? `${params?.title} -> "${params?.title}"` : ''}`,
+        };
     }
 
-    let total = stories[0]?.count ?? 0;
+    const total = stories[0]?.count ?? 0;
 
-    if (total == 0 && offset > 0) {
+    if (total === 0 && offset > 0) {
         params.page = 1;
         return getStories(params);
     }
@@ -384,20 +465,19 @@ function getStories(params) {
     for (const story of stories) {
         story.characters = [];
 
-        let characters = getCharactersByStoryId(story.id);
-        let pairings = [];
+        const characters = getCharactersByStoryId(story.id);
+        const pairings = [];
         for (const character of characters) {
-            if (character.pairing == 0) {
+            if (character.pairing === 0) {
                 story.characters.push(character.name);
-            }
-            else {
+            } else {
                 if (!pairings[character.pairing]) {
                     pairings[character.pairing] = [];
                 }
                 pairings[character.pairing].push(character.name);
             }
         }
-        pairings.shift()
+        pairings.shift();
         story.pairings = pairings;
     }
 
@@ -406,50 +486,53 @@ function getStories(params) {
         limit: params.limit,
         count: stories.length,
         total: total,
-        page: params.page
-    } 
+        page: params.page,
+    };
 }
 
 function getCommunitiesByStoryId(storyId) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
-    
-    const stmt = db.prepare('SELECT * FROM story_community sc INNER JOIN community c ON sc.community_id = c.id WHERE sc.story_id = ?');
+
+    const stmt = db.prepare(
+        'SELECT * FROM story_community sc INNER JOIN community c ON sc.community_id = c.id WHERE sc.story_id = ?',
+    );
     return stmt.all(storyId);
 }
 
- function getFandomByName(name, backUpName = null) {
+function getFandomByName(name, backUpName = null) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
     if (!name) {
         return null;
     }
 
-    let name2 = name.replaceAll('&amp;', '&')
+    const name2 = name
+        .replaceAll('&amp;', '&')
         .replaceAll('&lt;', '<')
         .replaceAll('&gt;', '>')
-        .replaceAll('\'', '\\\'');
+        .replaceAll("'", "\\'");
     let name3 = '';
     let name4 = '';
 
     if (backUpName) {
-        backUpName = backUpName.replaceAll('&amp;', '&')
+        backUpName = backUpName
+            .replaceAll('&amp;', '&')
             .replaceAll('&lt;', '<')
             .replaceAll('&gt;', '>')
-            .replaceAll('\'', '\\\'');
-
+            .replaceAll("'", "\\'");
 
         if (backUpName.includes(' & ')) {
-            name3 = name2 + ' & ' + backUpName.split(' & ')[0];
+            name3 = `${name2} & ${backUpName.split(' & ')[0]}`;
         }
     } else {
         if (name2.includes(' & ')) {
-            let parts = name2.split(' & ');
+            const parts = name2.split(' & ');
             parts.shift();
-    
+
             name4 = parts.join(' & ');
         }
     }
@@ -460,15 +543,17 @@ function getCommunitiesByStoryId(storyId) {
 
 function getCharacterByNameAndFandom(name, fandom_id) {
     if (!db) {
-        throw Error('Database connection has not been established')  
+        throw Error('Database connection has not been established');
     }
 
-    const stmt = db.prepare('SELECT * FROM character WHERE name = ? AND fandom_id = ?');
+    const stmt = db.prepare(
+        'SELECT * FROM character WHERE name = ? AND fandom_id = ?',
+    );
     return stmt.get([name, fandom_id]);
 }
 
 /**
- * @param {Number} storyId 
+ * @param {Number} storyId
  * @returns {Object}
  */
 function getCharactersByStoryId(storyId) {
@@ -482,7 +567,6 @@ function getCharactersByStoryId(storyId) {
     return stmt.all(storyId);
 }
 
-
 module.exports = {
     init,
     saveFandoms,
@@ -492,5 +576,5 @@ module.exports = {
     getStoryById,
     getCommunitiesByStoryId,
     getFandomCount,
-    getStories
-}
+    getStories,
+};

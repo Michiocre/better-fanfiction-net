@@ -13,6 +13,8 @@ describe('decode', () => {
 
 describe('en/decode', () => {
     expect(utils.b64_to_utf8(utils.utf8_to_b64(''))).to.be('');
-    expect(utils.b64_to_utf8(utils.utf8_to_b64('This is a test'))).to.be('This is a test');
+    expect(utils.b64_to_utf8(utils.utf8_to_b64('This is a test'))).to.be(
+        'This is a test',
+    );
     expect(utils.b64_to_utf8(utils.utf8_to_b64('&'))).to.be('&');
 });
