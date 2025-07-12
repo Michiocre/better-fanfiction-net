@@ -3,25 +3,26 @@ const defaultSettings = {
     url: 'http://localhost:8888',
     overlayOpen: false,
     darkMode: false,
-    tagGroups: ['general', 'generated', 'author', 'personal'],
+    tagGroups: ['general', 'generated', 'author', 'personal']
 };
 
-const loadedSettings = JSON.parse(localStorage.getItem('betterff')) ?? {};
+let loadedSettings = JSON.parse(localStorage.getItem('betterff')) ?? {};
+
 let settings = {
     autoLoad: loadedSettings.autoLoad ?? defaultSettings.autoLoad,
     url: loadedSettings.url ?? defaultSettings.url,
     overlayOpen: loadedSettings.overlayOpen ?? defaultSettings.overlayOpen,
     darkMode: loadedSettings.darkMode ?? defaultSettings.darkMode,
-    tagGroups: loadedSettings.tagGroups ?? defaultSettings.tagGroups,
+    tagGroups: loadedSettings.tagGroups ?? defaultSettings.tagGroups
 };
 
 localStorage.setItem('betterff', JSON.stringify(settings));
 
-const document_observer = new MutationObserver((_mutations) => {
+let document_observer = new MutationObserver(mutations => {
     if (document.head) {
         if (settings.darkMode) {
-            const link = document.createElement('link');
-            const href = chrome.runtime.getURL('css/dark.css');
+            let link = document.createElement('link');
+            let href = chrome.runtime.getURL('css/dark.css');
             link.setAttribute('type', 'text/css');
             link.setAttribute('class', 'betterff-css');
             link.setAttribute('rel', 'stylesheet');
@@ -36,5 +37,5 @@ const document_observer = new MutationObserver((_mutations) => {
 document_observer.observe(document, {
     childList: true,
     characterData: true,
-    subtree: true,
+    subtree: true
 });

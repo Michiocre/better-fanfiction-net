@@ -24,9 +24,7 @@ describe('en/decode', () => {
         expect(utils.b64_to_utf8(utils.utf8_to_b64(''))).to.be('');
     });
     it('should work with test strings', () => {
-        expect(utils.b64_to_utf8(utils.utf8_to_b64('This is a test'))).to.be(
-            'This is a test',
-        );
+        expect(utils.b64_to_utf8(utils.utf8_to_b64('This is a test'))).to.be('This is a test');
     });
     it('should work with special characters', () => {
         expect(utils.b64_to_utf8(utils.utf8_to_b64('&'))).to.be('&');

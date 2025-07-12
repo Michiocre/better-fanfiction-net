@@ -22,9 +22,7 @@ html {
     padding: 3px 5px 2px 5px;
     font-size: smaller;
     color: transparent;
-    transition:
-        max-width 0.2s,
-        color 0.2s;
+    transition: max-width 0.2s, color 0.2s;
     overflow: hidden;
 }
 

@@ -3,20 +3,16 @@
  */
 
 /**
- * @param {Array<HTMLSpanElement>} spans
- * @param {Number} communityId
- * @param {Boolean} forced
+ * 
+ * @param {Array<HTMLSpanElement>} spans 
+ * @param {Number} communityId 
+ * @param {Boolean} forced 
  */
 function sendStories(spans, communityId, forced) {
-    let htmlEl = spans.map((el) => el.parentElement);
-    htmlEl = htmlEl.filter(
-        (el) =>
-            forced ||
-            el.firstChild.classList.contains('bff-error') ||
-            el.firstChild.classList.contains('bff-warning'),
-    );
+    let htmlEl = spans.map(el => el.parentElement);
+    htmlEl = htmlEl.filter(el => forced || el.firstChild.classList.contains('bff-error') || el.firstChild.classList.contains('bff-warning'));
 
-    for (const el of htmlEl) {
+    for (let el of htmlEl) {
         el.firstChild.classList.remove('bff-error');
         el.firstChild.classList.remove('bff-success');
         el.firstChild.classList.remove('bff-warning');
@@ -24,44 +20,30 @@ function sendStories(spans, communityId, forced) {
         el.firstChild.innerText = 'loading';
     }
 
-    const elements = htmlEl.map((el) => utf8_to_b64(el.innerHTML));
+    let elements = htmlEl.map(el => utf8_to_b64(el.innerHTML));
     let communityEl = document.getElementById('gui_table1i')?.innerHTML;
     if (!communityEl) {
         communityEl = document.getElementById('gui_table1')?.innerHTML;
     }
 
-    content
-        .fetch(`${settings.url}/parser/page`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                url: window.location.href,
-                elements,
-                communityEl: communityEl ? utf8_to_b64(communityEl) : '',
-                fandomName: document
-                    .getElementById('content_wrapper_inner')
-                    ?.childNodes[5]?.data?.trim(),
-                communityName:
-                    document
-                        .getElementById('content_wrapper_inner')
-                        ?.childNodes[15]?.data?.trim() ||
-                    document
-                        .getElementById('content_wrapper_inner')
-                        ?.childNodes[11]?.data?.trim() ||
-                    document
-                        .getElementById('content_wrapper_inner')
-                        ?.firstChild.childNodes[15]?.data?.trim() ||
-                    document
-                        .getElementById('content_wrapper_inner')
-                        ?.firstChild.childNodes[11]?.data?.trim(),
-            }),
-        })
-        .then((res) => res.json())
-        .then((val) => {
-            updateIndicators(spans, val, communityId);
-        });
+    content.fetch(`${settings.url}/parser/page`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            url: window.location.href,
+            elements,
+            communityEl: communityEl? utf8_to_b64(communityEl):'',
+            fandomName: document.getElementById('content_wrapper_inner')?.childNodes[5]?.data?.trim(),
+            communityName: document.getElementById('content_wrapper_inner')?.childNodes[15]?.data?.trim()
+            || document.getElementById('content_wrapper_inner')?.childNodes[11]?.data?.trim()
+            || document.getElementById('content_wrapper_inner')?.firstChild.childNodes[15]?.data?.trim()
+            || document.getElementById('content_wrapper_inner')?.firstChild.childNodes[11]?.data?.trim()
+        }),
+    }).then(res => res.json()).then(val => {
+        updateIndicators(spans, val, communityId);
+    });
 }
 
 /**
@@ -75,7 +57,7 @@ function updateIndicators(spans, stories, communityId) {
             continue;
         }
 
-        const story = stories.find((el) => el.id === Number(span.id.split('-')[2]));
+        let story = stories.find(el => el.id === Number(span.id.split('-')[2]));
 
         let status = 'not_registered';
         if (story) {
@@ -85,10 +67,7 @@ function updateIndicators(spans, stories, communityId) {
                 status = 'outdated';
             }
 
-            if (
-                communityId &&
-                !story.communities.find((el) => el.id === communityId)
-            ) {
+            if (communityId && !story.communities.find(el => el.id === communityId)) {
                 status = 'outdated';
             }
         }
@@ -114,79 +93,65 @@ function updateIndicators(spans, stories, communityId) {
 }
 
 function handleFandomLoader() {
-    const wrapper = document.getElementById('content_wrapper_inner');
+    let wrapper = document.getElementById('content_wrapper_inner');
     wrapper.classList.add('bff');
-    const newEl = document.createElement('span');
+    let newEl = document.createElement('span');
     newEl.innerText = 'loading';
     newEl.classList.add('bff-loading');
     newEl.classList.add('bff-span');
 
-    const categories = Array.from(
-        document.getElementsByName('pcategoryid')[0].children,
-    )
-        .map((option) => {
-            return {
-                id: option.value,
-                name: option.innerText,
-            };
-        })
-        .filter((f) => f.id >= 0);
+    let categories = Array.from(document.getElementsByName('pcategoryid')[0].children).map(option => {
+        return {
+            id: option.value,
+            name: option.innerText
+        };
+    }).filter(f => f.id >= 0);
 
     let fandoms = [];
-    for (const cat of categories) {
-        fandoms = fandoms.concat(
-            Array.from(
-                document.getElementById(`cat_${cat.id}`).firstChild.children,
-            )
-                .map((foption) => {
-                    return {
-                        id: foption.value,
-                        category: cat.name,
-                        name: foption.title,
-                    };
-                })
-                .filter((f) => f.id >= 0),
-        );
+    for (let cat of categories) {
+        fandoms = fandoms.concat(Array.from(document.getElementById('cat_' + cat.id).firstChild.children).map(foption => {
+            return {
+                id: foption.value,
+                category: cat.name,
+                name: foption.title
+            }
+        }).filter(f => f.id >= 0));
     }
 
-    newEl.onclick = (el) => {
-        if (
-            el.target.classList.contains('bff-warning') ||
-            el.target.classList.contains('bff-error')
-        ) {
+    newEl.onclick = function (el) {
+        if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
+            let list = document.getElementsByClassName('bff-span');
             newEl.classList.remove('bff-error');
             newEl.classList.remove('bff-success');
             newEl.classList.remove('bff-warning');
             newEl.classList.add('bff-loading');
             newEl.innerText = 'updating';
 
-            content
-                .fetch(`${settings.url}/parser/fandoms`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ elements: fandoms }),
-                })
-                .then((res) => {
-                    if (res.status === 200) {
-                        newEl.classList.remove('bff-error');
-                        newEl.classList.remove('bff-warning');
-                        newEl.classList.add('bff-success');
-                        newEl.innerText = 'loaded';
-                    } else {
-                        newEl.classList.remove('bff-success');
-                        newEl.classList.remove('bff-warning');
-                        newEl.classList.add('bff-error');
-                        newEl.innerText = 'error';
-                    }
-                });
+            content.fetch(`${settings.url}/parser/fandoms`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({elements: fandoms}),
+            }).then(res => {
+                if (res.status == 200) {
+                    newEl.classList.remove('bff-error');
+                    newEl.classList.remove('bff-warning');
+                    newEl.classList.add('bff-success');
+                    newEl.innerText = 'loaded';
+                } else {
+                    newEl.classList.remove('bff-success');
+                    newEl.classList.remove('bff-warning');
+                    newEl.classList.add('bff-error');
+                    newEl.innerText = 'error';
+                }
+            });
         }
     };
     wrapper.insertBefore(newEl, wrapper.children[2]);
 
-    content.fetch(`${settings.url}/fandoms/count`).then((res) => {
-        res.json().then((val) => {
+    content.fetch(`${settings.url}/fandoms/count`).then(res => {
+        res.json().then(val => {
             val.count--;
             let status = 'not_registered';
             if (val.count === 0) {
@@ -254,26 +219,20 @@ function appendOverlay() {
     </div>
     `;
     document.body.append(overlay.children[0]);
-    document.getElementById('betterff-search-button').onclick = (_e) => {
-        window.location =
-            'https://www.fanfiction.net/topic/241520/187482375/1/Search-Page';
+    document.getElementById('betterff-search-button').onclick = _e => {
+        window.location = 'https://www.fanfiction.net/topic/241520/187482375/1/Search-Page';
     };
-    document.getElementById('betterff-settings-button').onclick = (_e) => {
+    document.getElementById('betterff-settings-button').onclick = _e => {
         settings.overlayOpen = !settings.overlayOpen;
-        document
-            .getElementById('betterff-overlay')
-            .classList.toggle('closed', !settings.overlayOpen);
+        document.getElementById('betterff-overlay').classList.toggle('closed', !settings.overlayOpen);
         localStorage.setItem('betterff', JSON.stringify(settings));
     };
-    document.getElementById('betterff-settings-form').onsubmit = (e) => {
+    document.getElementById('betterff-settings-form').onsubmit = e => {
         const formData = new FormData(e.target);
         const formProps = Object.fromEntries(formData);
         settings = formProps;
         settings.overlayOpen = false;
-        settings.tagGroups = document
-            .getElementById('bff-tagGroups')
-            .value.split(',')
-            .map((el) => el.trim());
+        settings.tagGroups = document.getElementById('bff-tagGroups').value.split(',').map(el => el.trim());
         localStorage.setItem('betterff', JSON.stringify(settings));
 
         location.reload();
@@ -281,9 +240,8 @@ function appendOverlay() {
 }
 
 function loadSearchPage() {
-    const urlParts = window.location.href.split('Search-Page/');
-    const paramMap = [
-        'title',
+    let urlParts = window.location.href.split('Search-Page/');
+    const paramMap = ['title',
         'description',
         'datefrom',
         'dateuntil',
@@ -291,7 +249,7 @@ function loadSearchPage() {
         'page',
         'limit',
     ];
-    const params = {
+    let params = {
         title: '',
         description: '',
         page: 1,
@@ -299,7 +257,7 @@ function loadSearchPage() {
     };
     let sendRightAway = false;
     if (urlParts.length > 1) {
-        const paramsList = urlParts[1].split('/').map((el) => decodeURI(el));
+        let paramsList = urlParts[1].split('/').map(el => decodeURI(el));
         for (let i = 0; i < paramsList.length; i++) {
             params[paramMap[i]] = paramsList[i];
         }
@@ -370,38 +328,31 @@ function loadSearchPage() {
 }
 
 function searchStories(paramMap) {
-    const formData = new FormData(document.getElementById('bff-search-form'));
+    let formData = new FormData(document.getElementById('bff-search-form'));
     let searchString = '';
 
-    const postObject = {};
-    paramMap.forEach((key) => {
-        const value = formData.get(key);
+    let postObject = {};
+    paramMap.forEach(key => {
+        let value = formData.get(key);
         searchString += `${encodeURI(value)}/`;
         postObject[key] = value;
     });
 
-    content
-        .fetch(`${settings.url}/stories`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(postObject),
-        })
-        .then(async (res) => {
-            if (res.body) {
-                return res.json();
-            }
-            return [];
-        })
-        .then((val) => {
-            window.history.pushState(
-                val,
-                '',
-                `${origin}/topic/241520/187482375/1/Search-Page/${searchString}`,
-            );
-            renderSearchResult(val);
-        });
+    content.fetch(`${settings.url}/stories`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(postObject),
+    }).then(async res => {
+        if (res.body) {
+            return res.json();
+        }
+        return [];
+    }).then(val => {
+        window.history.pushState(val, '', `${origin}/topic/241520/187482375/1/Search-Page/${searchString}`);
+        renderSearchResult(val);
+    });
 }
 
 window.addEventListener('popstate', (event) => {
@@ -413,22 +364,22 @@ window.addEventListener('popstate', (event) => {
 function renderSearchResult(val) {
     if (val.error) {
         document.getElementById('bff-search-result').innerHTML = `
-        <div class="panel">
-        <span class="gui_error">
-        ${val.error}
-        ${JSON.stringify(val.details)}
-        </span>
-        </div>`;
+            <div class="panel">
+                <span class="gui_error">
+                    ${val.error}
+                    ${JSON.stringify(val.details)}
+                </span>
+            </div>`;
         return;
     }
 
     if (val.count === 0) {
         document.getElementById('bff-search-result').innerHTML = `
-        <div class="panel">
-        <span class="gui_normal">
-        No result found matching your search.
-        </span>
-        </div>`;
+            <div class="panel">
+                <span class="gui_normal">
+                    No result found matching your search.
+                </span>
+            </div>`;
         return;
     }
 
@@ -474,31 +425,24 @@ function renderSearchResult(val) {
         paginationString += `<a onclick=document.getElementById('bff-page').value=${Number(val.page) + 1};document.getElementById('bff-search-button-hidden').click()>Next »</a> `;
     }
 
-    document.getElementsByClassName('bff-search-pagination')[0].innerHTML =
-        paginationString;
+    document.getElementsByClassName('bff-search-pagination')[0].innerHTML = paginationString;
 
     if (val.count < 10) {
         document.getElementById('bff-pagination-bottom').hidden = true;
     }
-    document.getElementById('bff-pagination-bottom').innerHTML =
-        paginationString;
+    document.getElementById('bff-pagination-bottom').innerHTML = paginationString;
 
-    val.stories.forEach((story) =>
-        document
-            .getElementById('bff-search-result')
-            .appendChild(createStory(story)),
-    );
+    val.stories.forEach((story) => document.getElementById('bff-search-result').appendChild(createStory(story)));
 }
 
 /**
- *
  * @param {Story} data
  * @returns {HTMLDivElement}
  */
 function createStory(data) {
-    const story = document.createElement('div');
+    let story = document.createElement('div');
 
-    const parts = [];
+    let parts = [];
     if (!data.xfandom) {
         parts.push(data.fandom);
     } else {
@@ -508,25 +452,15 @@ function createStory(data) {
     parts.push(`Rated: ${data.rating}`);
     parts.push(data.language);
     data.genreA && !data.genreB && parts.push(data.genreA);
-    data.genreA &&
-        data.genreB &&
-        parts.push([data.genreA, data.genreB].join('/'));
+    data.genreA && data.genreB && parts.push([data.genreA, data.genreB].join('/'));
     parts.push(`Chapters: ${niceNumber(data.chapters)}`);
     parts.push(`Words: ${niceNumber(data.words)}`);
     data.reviews > 0 && parts.push(`Reviews: ${niceNumber(data.reviews)}`);
     data.favs > 0 && parts.push(`Favs: ${niceNumber(data.favs)}`);
     data.follows > 0 && parts.push(`Follows: ${niceNumber(data.follows)}`);
-    data.updated > 0 &&
-        parts.push(
-            `Updated: <span data-xutime="${data.updated}">${unixToReadable(data.updated)}</span>`,
-        );
-    parts.push(
-        `Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span>`,
-    );
-    (data.pairings.length > 0 || data.characters.length > 0) &&
-        parts.push(
-            `${data.pairings.map((pair) => `[${pair.join(', ')}]`).join(' ')} ${data.characters.join(', ')}`,
-        );
+    data.updated > 0 && parts.push(`Updated: <span data-xutime="${data.updated}">${unixToReadable(data.updated)}</span>`);
+    parts.push(`Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span>`);
+    (data.pairings.length > 0 || data.characters.length > 0) && parts.push(`${data.pairings.map(pair => `[${pair.join(', ')}]`).join(' ')} ${data.characters.join(', ')}`);
     data.completed && parts.push(`Complete`);
 
     story.innerHTML = `
@@ -549,18 +483,14 @@ function createStory(data) {
     return story;
 }
 
-const _main = (() => {
+let main = function() {
     if (window.location.pathname.startsWith('/selectcategory.php')) {
         return handleFandomLoader();
     }
 
     appendOverlay();
 
-    if (
-        window.location.pathname.startsWith(
-            '/topic/241520/187482375/1/Search-Page',
-        )
-    ) {
+    if (window.location.pathname.startsWith('/topic/241520/187482375/1/Search-Page')) {
         return loadSearchPage();
     }
 
@@ -573,22 +503,22 @@ const _main = (() => {
         communityId = parseInt(window.location.pathname.split('/')[3]);
     }
 
-    const storiesEl = document.getElementsByClassName('z-list');
+    let storiesEl = document.getElementsByClassName('z-list');
 
     if (storiesEl.length === 0) {
         return;
     }
 
-    const adBlock = storiesEl[0].previousElementSibling;
+    let adBlock = storiesEl[0].previousElementSibling;
     if (adBlock) {
         adBlock.hidden = true;
     }
 
-    const storyIds = [];
-    const spans = [];
+    let storyIds = [];
+    let spans = [];
 
-    for (const storyEl of storiesEl) {
-        const elementExists = storyEl.firstChild.id.startsWith('bff-span-');
+    for (let storyEl of storiesEl) {
+        let elementExists = storyEl.firstChild.id.startsWith('bff-span-');
 
         let id, spanEl;
 
@@ -605,23 +535,13 @@ const _main = (() => {
             spanEl.innerText = 'loading';
             spanEl.classList.add('bff-loading');
             spanEl.classList.add('bff-span');
-            spanEl.setAttribute(
-                'time',
-                storyEl.lastChild.lastChild
-                    .getElementsByTagName('span')[0]
-                    .getAttribute('data-xutime'),
-            );
-            spanEl.onclick = (el) => {
-                document.body.onclick = (e) => {
-                    if (e.ctrlKey) {
-                        sendStories([spanEl], communityId, true);
-                    } else if (
-                        el.target.classList.contains('bff-warning') ||
-                        el.target.classList.contains('bff-error')
-                    ) {
-                        sendStories(spans, communityId, false);
-                    }
-                };
+            spanEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime'));
+            spanEl.onclick = event => {
+                if (event.ctrlKey) {
+                    sendStories([spanEl], communityId, true);
+                } else if (event.target.classList.contains('bff-warning') ||event.target.classList.contains('bff-error')) {
+                    sendStories(spans, communityId, false);
+                }
             };
             storyEl.insertBefore(spanEl, storyEl.firstChild);
         }
@@ -630,33 +550,30 @@ const _main = (() => {
         spans.push(spanEl);
     }
 
-    content
-        .fetch(`${settings.url}/stories/status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ ids: storyIds }),
-        })
-        .then(async (res) => {
-            if (res.body) {
-                return res.json();
+    content.fetch(`${settings.url}/stories/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: storyIds })
+    }).then(async res => {
+        if (res.body) {
+            return res.json();
+        }
+        return [];
+    }).then(val => {
+        updateIndicators(spans, val, communityId);
+        if (settings.autoLoad) {
+            let redEl = document.getElementsByClassName('bff-error');
+            let yellowEl = document.getElementsByClassName('bff-error');
+            if (redEl.length > 0) {
+                redEl[0].click();
+            } else if (yellowEl.length > 0) {
+                yellowEl[0].click();
             }
-            return [];
-        })
-        .then((val) => {
-            updateIndicators(spans, val, communityId);
-            if (settings.autoLoad) {
-                const redEl = document.getElementsByClassName('bff-error');
-                const yellowEl = document.getElementsByClassName('bff-error');
-                if (redEl.length > 0) {
-                    redEl[0].click();
-                } else if (yellowEl.length > 0) {
-                    yellowEl[0].click();
-                }
-            }
-        });
-})();
+        }
+    });
+}();
 
 /**
  * @param {number} num
@@ -664,17 +581,15 @@ const _main = (() => {
  */
 function niceNumber(num, shorten) {
     if (shorten && num >= 1000) {
-        let thousands = (num / 1000).toFixed(1);
-
-        if (thousands >= 100) {
-            thousands = thousands.toFixed(0);
-        }
+        let thousands = (num / 1000);
+        let roundedNumber  = thousands.toFixed(thousands < 100 ? 1 : 0);
 
         if (thousands >= 1000) {
-            const millions = (thousands / 1000).toFixed(1);
-            return `${new Intl.NumberFormat('en-US').format(millions)}M`;
+            let millions = (thousands / 1000)
+            roundedNumber = millions.toFixed(millions < 100 ? 1 : 0);
+            return `${new Intl.NumberFormat('en-US').format(roundedNumber)}M`;
         }
-        return `${new Intl.NumberFormat('en-US').format(thousands)}K`;
+        return `${new Intl.NumberFormat('en-US').format(roundedNumber)}K`;
     }
     return new Intl.NumberFormat('en-US').format(num);
 }
@@ -684,12 +599,12 @@ function niceNumber(num, shorten) {
  * @return {String}
  */
 function unixToReadable(unixTime) {
-    const d = new Date(unixTime * 1000);
-    const now = new Date();
-    const diff = new Date(now - d);
+    let d = new Date(unixTime * 1000);
+    let now = new Date();
+    let diff = new Date(now - d);
 
-    const minutesAgo = Math.floor(diff / 1000 / 60);
-    const hoursAgo = Math.floor(minutesAgo / 60);
+    let minutesAgo = Math.floor(diff / 1000 / 60);
+    let hoursAgo = Math.floor(minutesAgo / 60);
 
     if (minutesAgo < 60) {
         return `${minutesAgo}m ago`;
@@ -700,14 +615,10 @@ function unixToReadable(unixTime) {
     }
 
     if (d.getFullYear() === now.getFullYear()) {
-        return d.toLocaleString('en-us', { month: 'short', day: 'numeric' });
+        return d.toLocaleString('en-us', { month: 'short', day: 'numeric'});
     }
 
-    return d.toLocaleString('en-us', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-    });
+    return d.toLocaleString('en-us', { month: 'short', day: 'numeric', year: 'numeric'});
 }
 
 /**

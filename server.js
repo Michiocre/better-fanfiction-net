@@ -12,7 +12,7 @@ const corsOptions = {
     origin: 'https://www.fanfiction.net',
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type'],
-    optionsSuccessStatus: 200,
+    optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions)); // Enable preflight across-the-board
@@ -29,62 +29,34 @@ async function main() {
     }
 
     app.post('/parser/page', async (req, res) => {
-        const urlParts = req.body.url.split('/');
+        let urlParts = req.body.url.split('/');
 
-        const parts = req.body.elements.map(utils.b64_to_utf8);
-        const community = utils.b64_to_utf8(req.body.communityEl);
+        let parts = req.body.elements.map(utils.b64_to_utf8);
+        let community = utils.b64_to_utf8(req.body.communityEl);
 
         let savedStories = [];
 
         if (urlParts[3] === 'u') {
-            const stories = parser.parseUserPage(req.body.url, parts);
-            utils.log(
-                'Finished parsing:',
-                req.body.url,
-                'storyCount:',
-                stories.length,
-            );
+            let stories = parser.parseUserPage(req.body.url, parts);
+            utils.log('Finished parsing:', req.body.url, 'storyCount:', stories.length);
             savedStories = await db.saveStories(stories);
-            utils.log(
-                'Finished saving:',
-                req.body.url,
-                'savedCount:',
-                savedStories.length,
-            );
+            utils.log('Finished saving:', req.body.url, 'savedCount:', savedStories.length);
         } else {
-            const stories = parser.parseSearchPage(
-                req.body.url,
-                parts,
-                req.body.fandomName,
-                community,
-                req.body.communityName,
-            );
-            utils.log(
-                'Finished parsing:',
-                req.body.url,
-                'storyCount:',
-                stories.length,
-            );
+            let stories = parser.parseSearchPage(req.body.url, parts, req.body.fandomName, community, req.body.communityName);
+            utils.log('Finished parsing:', req.body.url, 'storyCount:', stories.length);
             savedStories = await db.saveStories(stories);
-            utils.log(
-                'Finished saving:',
-                req.body.url,
-                'savedCount:',
-                savedStories.length,
-            );
+            utils.log('Finished saving:', req.body.url, 'storyCount:', savedStories.length);
         }
 
-        res.status(200).send(
-            savedStories.map((el) => ({
-                id: el.id,
-                time: !el.updated ? el.published : el.updated,
-                communities: [el.community],
-            })),
-        );
+        res.status(200).send(savedStories.map(el => ({
+            id: el.id,
+            time: !el.updated ? el.published : el.updated,
+            communities: [el.community]
+        })));
     });
 
     app.post('/parser/fandoms', async (req, res) => {
-        const fandoms = req.body.elements;
+        let fandoms = req.body.elements;
         if ((await db.saveFandoms(fandoms)) < 0) {
             utils.error(`Failed to save fandoms`);
             return res.status(500).send();
@@ -93,7 +65,7 @@ async function main() {
         return res.status(200).send();
     });
 
-    app.get('/fandoms', async (_req, res) => {
+    app.get('/fandoms', async (req, res) => {
         res.send(await db.getFandoms());
     });
 
@@ -105,36 +77,32 @@ async function main() {
     });
 
     app.post('/stories', cors(corsOptions), async (req, res) => {
-        const params = req.body ?? {};
+        let params = req.body ?? {};
         params.limit = utils.clamp(Number(params.limit), 1, 100);
         params.page = utils.clamp(Number(params.page), 1, Number.MAX_VALUE);
 
         if (Number.isNaN(params.limit)) {
-            return res
-                .status(400)
-                .send('Invalid limit parameter, expected [Number]');
+            return res.status(400).send('Invalid limit parameter, expected [Number]');
         }
         if (Number.isNaN(params.page)) {
-            return res
-                .status(400)
-                .send('Invalid limit page, expected [Number]');
+            return res.status(400).send('Invalid limit page, expected [Number]');
         }
 
         res.status(200).send(await db.getStories(params));
     });
 
     app.post('/stories/status', cors(corsOptions), async (req, res) => {
-        const ids = req.body.ids;
-        const stories = [];
+        let ids = req.body.ids;
+        let stories = [];
         if (ids) {
             for (const id of ids) {
-                const story = await db.getStoryById(id);
+                let story = await db.getStoryById(id);
                 if (story) {
-                    const communities = await db.getCommunitiesByStoryId(id);
+                    let communities = await db.getCommunitiesByStoryId(id);
                     stories.push({
                         id: story.id,
                         time: !story.updated ? story.published : story.updated,
-                        communities: communities?.map((el) => ({ id: el.id })),
+                        communities: communities?.map(el => ({ id: el.id }))
                     });
                 }
             }

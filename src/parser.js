@@ -28,8 +28,8 @@ function parseDate(unixTime) {
 function parseChars(content) {
     if (!content) return [[], []];
     try {
-        const groups = content.split('] ');
-        const pairings = [];
+        let groups = content.split('] ');
+        let pairings = [];
         let characters = [];
 
         for (let group of groups) {
@@ -56,21 +56,19 @@ function parseChars(content) {
 
 function parseSearchDivData(content) {
     try {
-        const subLines = content.split('<div');
+        let subLines = content.split('<div');
         let description = subLines[1].split('>');
         description.shift();
         description = description.join('>');
 
-        const pattern = RegExp(
-            /^.*?>(?:(?:Crossover - ([^\n]+?) &amp; ([^\n]+) - )|([^\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/,
-        );
-        const data = pattern.exec(subLines[2]);
+        const pattern = RegExp(/^.*?>(?:(?:Crossover - ([^\n]+?) &amp; ([^\n]+) - )|([^\n]+) - )?Rated: (\S+) - (\S+) (?:- (\S+) )?- Chapters: ([\d,]+) - Words: ([\d,]+) (?:- Reviews: ([\d,]+) )?(?:- Favs: ([\d,]+) )?(?:- Follows: ([\d,]+) )?(?:- Updated:[^"]*"(\d+)".*? )?- Published:[^"]*"(\d+)".*n>(?: - (.+?))?<\/div.*?$/);
+        let data = pattern.exec(subLines[2]);
 
         let completed = false;
         let pairings, characters;
 
         if (data[14]) {
-            const endingParts = data[14].split(' - ');
+            let endingParts = data[14].split(' - ');
             if (endingParts.length > 1) {
                 completed = true;
                 [pairings, characters] = parseChars(endingParts[0]);
@@ -84,7 +82,7 @@ function parseSearchDivData(content) {
         let genres = [null, null];
 
         if (data[6]) {
-            const parts = data[6].split('/');
+            let parts = data[6].split('/');
             if (parts.length === 1) {
                 genres[0] = parts[0];
             } else if (parts.length === 2) {
@@ -121,9 +119,9 @@ function parseSearchDivData(content) {
             published: parseNumber(data[13]),
             pairings: pairings || [],
             characters: characters || [],
-            completed,
+            completed
         };
-    } catch (_error) {
+    } catch (error) {
         utils.warn('Cant parse search div lower data:', content);
     }
 }
@@ -137,7 +135,7 @@ function parseSearchDivHeader(content) {
             author: {
                 id: parseNumber(/\/u\/(\d+)/.exec(content)?.[1]),
                 name: /\/u\/[^>]*>(.*?)<\/a>/.exec(content)?.[1],
-            },
+            }
         };
     } catch (error) {
         utils.warn('Cant parse search div header: ', content, error);
@@ -147,32 +145,30 @@ function parseSearchDivHeader(content) {
 function parseSearchDiv(content) {
     content = content.replaceAll('<b>', '');
     content = content.replaceAll('</b>', '');
-    const lines = content.split('\n');
+    let lines = content.split('\n');
 
-    const headerData = parseSearchDivHeader(lines.shift());
+    let headerData = parseSearchDivHeader(lines.shift());
 
-    const lowerData = parseSearchDivData(lines.join(' '));
+    let lowerData = parseSearchDivData(lines.join(' '));
     return { ...headerData, ...lowerData };
 }
 
 function parseCommunityDiv(content) {
-    const pattern = new RegExp(
-        /^.*arrow".*?> ([^<>]+), Since: ([\d-]+).*?Founder: <a href="\/u\/(\d+).*?>(.*?)<.+? Stories: ([\d,]+) - Followers: ([\d,]+).*?id: ([\d,]+).*?<ol>(.*?)<\/ol>.*?<div>(.*?)<\/div>.*?$/gs,
-    );
-    const data = pattern.exec(content);
+    let pattern = new RegExp(/^.*arrow".*?> ([^<>]+), Since: ([\d\-]+).*?Founder: <a href="\/u\/(\d+).*?>(.*?)<.+? Stories: ([\d,]+) - Followers: ([\d,]+).*?id: ([\d,]+).*?<ol>(.*?)<\/ol>.*?<div>(.*?)<\/div>.*?$/gs);
+    let data = pattern.exec(content);
 
-    const staffStrings = data[8].split('</li>');
+    let staffStrings = data[8].split('</li>');
     staffStrings.pop();
 
-    const staffPattern = new RegExp(/u\/(\d+)[^>]*>(.*?)<\/a>/);
+    let staffPattern = new RegExp(/u\/(\d+)[^>]*>(.*?)<\/a>/);
     let staff = [];
     if (staffStrings) {
-        staff = staffStrings.map((el) => {
-            const x = staffPattern.exec(el);
+        staff = staffStrings.map(el => {
+            let x = staffPattern.exec(el);
 
             return {
                 id: parseNumber(x[1]),
-                name: x[2],
+                name: x[2]
             };
         });
     }
@@ -181,27 +177,21 @@ function parseCommunityDiv(content) {
         id: parseNumber(data[7]),
         author: {
             id: parseNumber(data[3]),
-            name: data[4],
+            name: data[4]
         },
         staff: staff,
         fandom: data[1],
         start_date: data[2],
         story_count: parseNumber(data[5]),
         follower: parseNumber(data[6]),
-        description: data[9],
+        description: data[9]
     };
 }
 
-function parseSearchPage(
-    url,
-    parts,
-    fandomName,
-    communityHeader,
-    communityName,
-) {
-    const urlParts = url.split('/');
+function parseSearchPage(url, parts, fandomName, communityHeader, communityName) {
+    let urlParts = url.split('/');
 
-    const stories = [];
+    let stories = [];
 
     for (const part of parts) {
         stories.push(parseSearchDiv(part));
@@ -229,12 +219,12 @@ function parseSearchPage(
 }
 
 function parseUserPage(url, parts) {
-    const urlParts = url.split('/');
+    let urlParts = url.split('/');
 
-    const stories = [];
+    let stories = [];
 
     for (const part of parts) {
-        const story = parseSearchDiv(part);
+        let story = parseSearchDiv(part);
 
         if (story.author.id === 0) {
             story.author.id = parseNumber(urlParts[4]);
