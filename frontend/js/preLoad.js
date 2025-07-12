@@ -7,7 +7,7 @@ const defaultSettings = {
 };
 
 const loadedSettings = JSON.parse(localStorage.getItem('betterff')) ?? {};
-const settings = {
+let settings = {
     autoLoad: loadedSettings.autoLoad ?? defaultSettings.autoLoad,
     url: loadedSettings.url ?? defaultSettings.url,
     overlayOpen: loadedSettings.overlayOpen ?? defaultSettings.overlayOpen,

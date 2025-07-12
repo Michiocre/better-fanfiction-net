@@ -417,18 +417,18 @@ function getStories(params) {
             JOIN fandom f ON s.fandom_id = f.id
             LEFT JOIN fandom fx ON s.xfandom_id = fx.id
             WHERE 1 = 1
-                ${params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
-                ${params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
-                ${params?.datefrom !== '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
-                ${params?.dateuntil !== '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
+                ${params?.title && params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
+                ${params?.description && params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
+                ${params?.datefrom && params?.datefrom !== '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
+                ${params?.datefrom && params?.dateuntil !== '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
 
             ${sortings[params.sort] ?? sortings.relavance}
             LIMIT $limit OFFSET $offset
         ) as res
         JOIN story_texts ht ON ht.id = res.id
         WHERE 1 = 1
-            ${params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
-            ${params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
+            ${params?.title && params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
+            ${params?.description && params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
         ${sortings[params.sort] ?? sortings.relavance}
         ;`;
 
@@ -443,8 +443,8 @@ function getStories(params) {
         stories = stmt.all({
             limit: params.limit,
             offset: offset,
-            title: `title:${params.title ?? ''}`,
-            description: `description:${params.description ?? ''}`,
+            title: `title:${params.title}`,
+            description: `description:${params.description}`,
             datefrom: utils.dateStringToUnix(params.datefrom),
             dateuntil: utils.dateStringToUnix(params.dateuntil),
         });

@@ -14,7 +14,7 @@ describe('basic parse test', () => {
 
     it('should parseDate', () => {
         expect(parser.parseDate(0)).to.eql(new Date(0));
-        const currentUnix = new Date.now();
+        const currentUnix = Date.now();
         expect(parser.parseDate(currentUnix / 1000)).to.eql(
             new Date(currentUnix),
         );
