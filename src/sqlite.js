@@ -307,7 +307,7 @@ function getStories(params) {
     }
 
     const sortings = {
-        relavance: 'ORDER BY rank asc',
+        relavance: 'ORDER BY rank asc, coalesce(updated, published) desc',
         update: 'ORDER BY coalesce(updated, published) desc, rank asc',
         publish: 'ORDER BY published desc, rank asc',
         reviews: 'ORDER BY reviews desc, rank asc',
@@ -333,22 +333,24 @@ function getStories(params) {
             JOIN fandom f ON s.fandom_id = f.id
             LEFT JOIN fandom fx ON s.xfandom_id = fx.id
             WHERE 1 = 1
-                ${params?.title && params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
-                ${params?.description && params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
-                ${params?.datefrom && params?.datefrom !== '' ? 'AND coalesce(s.updated, s.published) >= $datefrom' : ''}
-                ${params?.datefrom && params?.dateuntil !== '' ? 'AND coalesce(s.updated, s.published) <= $dateuntil' : ''}
-
+                ${params?.title && params?.title !== '' && 'AND story_texts MATCH $title'}
+                ${params?.description && params?.description !== '' && 'AND story_texts MATCH $description'}
+                ${params?.fandom && params?.fandom !== '' && 'AND f.name == $fandom'}
+                ${params?.datefrom && params?.datefrom !== '' && 'AND coalesce(s.updated, s.published) >= $datefrom'}
+                ${params?.dateuntil && params?.dateuntil !== '' && 'AND coalesce(s.updated, s.published) <= $dateuntil'}
             ${sortings[params.sort] ?? sortings.relavance}
             LIMIT $limit OFFSET $offset
         ) as res
         JOIN story_texts ht ON ht.id = res.id
         WHERE 1 = 1
-            ${params?.title && params?.title !== '' ? 'AND story_texts MATCH $title' : ''}
-            ${params?.description && params?.description !== '' ? 'AND story_texts MATCH $description' : ''}
+            ${params?.title && params?.title !== '' && 'AND story_texts MATCH $title'}
+            ${params?.description && params?.description !== '' && 'AND story_texts MATCH $description'}
         ${sortings[params.sort] ?? sortings.relavance}
         ;`;
 
     const stmt = db.prepare(searchString);
+
+    console.log(searchString);
 
     let offset = (params.page - 1) * params.limit ?? 0;
 
@@ -361,6 +363,7 @@ function getStories(params) {
             offset: offset,
             title: `title:${params.title}`,
             description: `description:${params.description}`,
+            fandom: params.fandom,
             datefrom: utils.dateStringToUnix(params.datefrom),
             dateuntil: utils.dateStringToUnix(params.dateuntil),
         });

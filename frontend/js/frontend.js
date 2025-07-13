@@ -26,7 +26,7 @@ function sendStories(spans, communityId, forced) {
         communityEl = document.getElementById('gui_table1')?.innerHTML;
     }
 
-    content.fetch(`${settings.url}/parser/page`, {
+    content.fetch(`${settings.backendUrl}/parser/page`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -92,13 +92,11 @@ function updateIndicators(spans, stories, communityId) {
     }
 }
 
-function handleFandomLoader() {
+function handleFandomPage() {
     let wrapper = document.getElementById('content_wrapper_inner');
     wrapper.classList.add('bff');
-    let newEl = document.createElement('span');
-    newEl.innerText = 'loading';
-    newEl.classList.add('bff-loading');
-    newEl.classList.add('bff-span');
+
+    let newEl = createElement('span', ['bff-loading', 'bff-span'], 'loading');
 
     let categories = Array.from(document.getElementsByName('pcategoryid')[0].children).map(option => {
         return {
@@ -120,37 +118,33 @@ function handleFandomLoader() {
 
     newEl.onclick = (el) => {
         if (el.target.classList.contains('bff-warning') || el.target.classList.contains('bff-error')) {
-            let list = document.getElementsByClassName('bff-span');
-            newEl.classList.remove('bff-error');
-            newEl.classList.remove('bff-success');
-            newEl.classList.remove('bff-warning');
+            newEl.classList.remove('bff-error', 'bff-success', 'bff-warning');
             newEl.classList.add('bff-loading');
-            newEl.innerText = 'updating';
+            newEl.textContent = 'updating';
 
-            content.fetch(`${settings.url}/parser/fandoms`, {
+            content.fetch(`${settings.backendUrl}/parser/fandoms`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({elements: fandoms}),
             }).then(res => {
+                newEl.classList.remove('bff-loading');
                 if (res.status === 200) {
-                    newEl.classList.remove('bff-error');
-                    newEl.classList.remove('bff-warning');
+                    newEl.classList.remove('bff-error', 'bff-warning');
                     newEl.classList.add('bff-success');
-                    newEl.innerText = 'loaded';
+                    newEl.textContent = 'loaded';
                 } else {
-                    newEl.classList.remove('bff-success');
-                    newEl.classList.remove('bff-warning');
+                    newEl.classList.remove('bff-success', 'bff-warning');
                     newEl.classList.add('bff-error');
-                    newEl.innerText = 'error';
+                    newEl.textContent = 'error';
                 }
             });
         }
     };
     wrapper.insertBefore(newEl, wrapper.children[2]);
 
-    content.fetch(`${settings.url}/fandoms/count`).then(res => {
+    content.fetch(`${settings.backendUrl}/fandoms/count`).then(res => {
         res.json().then(val => {
             val.count--;
             let status = 'not_registered';
@@ -187,171 +181,147 @@ function handleFandomLoader() {
 }
 
 function appendOverlay() {
-    const overlay = document.createElement('div');
-    overlay.innerHTML = `
-    <div id="betterff-overlay" style="text-align:left;border-left: 1px solid #dddddd;" class="table-bordered bff-overlay ${settings.overlayOpen ? '' : 'closed'}">
-        <button class="btn betterff-overlay-btn" id="betterff-settings-button" style="position: absolute; transform: translateX(-100%);">!</button>
-        <button class="btn betterff-overlay-btn" id="betterff-search-button" style="position: absolute; transform: translateX(-100%); top: 40px;">?</button>
-        <form id="betterff-settings-form" action="javascript:;">
-            <div class="tcat" style="background-color: transparent !important"><span><b>Settings</b></span></div>
-            <table class="table table-bordered">
-                <tbody>
-                    <tr>
-                        <td style="border-left: none;">Backend Url</td>
-                        <td><input class="span3" type="text" name="url" id="bff-backend-url" value="${settings.url}" title="BackendUrl"></td>
-                    </tr>
-                    <tr>
-                        <td style="border-left: none;">Autoload</td>
-                        <td><input onclick="" type="checkbox" name="autoLoad" value="1" ${settings.autoLoad ? 'checked' : ''}></td>
-                    </tr>
-                    <tr>
-                        <td style="border-left: none;">Darkmode</td>
-                        <td><input onclick="" type="checkbox" name="darkMode" value="1" ${settings.darkMode ? 'checked' : ''}></td>
-                    </tr>
-                    <tr>
-                        <td style="border-left: none;">Tag Groups</td>
-                        <td><textarea class="input-block-level" rows=3 name="tagGroups" id="bff-tagGroups" title="BackendUrl">${settings.tagGroups.join(', ')}</textarea></td>
-                    </tr>
-                </tbody>
-            </table>
-            <button type="submit" class="btn">Save</button>
-        </form>
-    </div>
-    `;
-    document.body.append(overlay.children[0]);
+    let oldOverlay = document.getElementById('betterff-overlay');
+    if (oldOverlay) {
+        document.body.removeChild(oldOverlay);
+    }
+
+    let overlay = createOverlay(settings);
+
+    document.body.append(overlay);
     document.getElementById('betterff-search-button').onclick = _e => {
         window.location = 'https://www.fanfiction.net/topic/241520/187482375/1/Search-Page';
     };
     document.getElementById('betterff-settings-button').onclick = _e => {
         settings.overlayOpen = !settings.overlayOpen;
         document.getElementById('betterff-overlay').classList.toggle('closed', !settings.overlayOpen);
-        localStorage.setItem('betterff', JSON.stringify(settings));
+        localStorage.setItem('betterff-settings', JSON.stringify(settings));
     };
     document.getElementById('betterff-settings-form').onsubmit = e => {
         const formData = new FormData(e.target);
         const formProps = Object.fromEntries(formData);
         settings = formProps;
         settings.overlayOpen = false;
-        settings.tagGroups = document.getElementById('bff-tagGroups').value.split(',').map(el => el.trim());
-        localStorage.setItem('betterff', JSON.stringify(settings));
+        settings.tagGroups = formProps.tagGroups.split(',').map(el => el.trim());
+        localStorage.setItem('betterff-settings', JSON.stringify(settings));
 
         location.reload();
     };
 }
 
-function loadSearchPage() {
+async function handleSearchPage() {
     let urlParts = window.location.href.split('Search-Page/');
-    const paramMap = ['title',
-        'description',
-        'datefrom',
-        'dateuntil',
-        'sort',
-        'page',
-        'limit',
-    ];
+
+    let fandomList = await (await content.fetch(`${settings.backendUrl}/fandoms`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })).json() ?? [];
+
     let params = {
         title: '',
         description: '',
+        fandom: '',
+        datefrom: '',
+        dateuntil: '',
+        sort: 'relevance',
         page: 1,
         limit: 100,
     };
+
     let sendRightAway = false;
     if (urlParts.length > 1) {
-        let paramsList = urlParts[1].split('/').map(el => decodeURI(el));
-        for (let i = 0; i < paramsList.length; i++) {
-            params[paramMap[i]] = paramsList[i];
+        let urlParams = urlParts[1].split('/').map(el => decodeURI(el));
+        for (let i = 0; i < urlParams.length; i++) {
+            params[Object.keys(params)[i]] = urlParams[i];
         }
+        delete params.undefined;
         if (urlParts[1] !== '') {
             sendRightAway = true;
         }
     }
-    document.getElementById('content_wrapper_inner').innerHTML = `
-        <form id="bff-search-form">
-            <div class="bff-form-container">
-                <h3>BetterFF Search</h3>
-                <div class="bff-row">
-                    <label class="bff-label">Title</label>
-                    <input class="bff-input" type="text" name="title" placeholder="Title" value="${params.title}"></input>
-                </div>
-                <div class="bff-row">
-                    <label class="bff-label">Description</label>
-                    <input class="bff-input" type="text" name="description" placeholder="Description" value="${params.description}"></input>
-                </div>
-                <div class="bff-row">
-                    <label class="bff-label">Last Update after</label>
-                    <input class="bff-input" type="date" id="bff-datefrom" name="datefrom" value="${params.datefrom}"></input>
-                </div>
-                <div class="bff-row">
-                    <label class="bff-label">Last Update before</label>
-                    <input class="bff-input" type="date" id="bff-dateuntil" name="dateuntil" value="${params.dateuntil}"></input>
-                </div>
-                <div class="bff-row">
-                    <label class="bff-label">Order by</label>
-                    <select class="bff-input" type="dropdown" name="sort" placeholder="Description">
-                        <option value="relevance" ${params.sort === 'relevance' ? 'selected' : ''}>Relevance</option>
-                        <option value="update" ${params.sort === 'update' ? 'selected' : ''}>Update Date</option>
-                        <option value="publish" ${params.sort === 'publish' ? 'selected' : ''}>Publish Date</option>
-                        <option value="reviews" ${params.sort === 'reviews' ? 'selected' : ''}>Reviews</option>
-                        <option value="favorites" ${params.sort === 'favorites' ? 'selected' : ''}>Favorites</option>
-                        <option value="follows" ${params.sort === 'follows' ? 'selected' : ''}>Follows</option>
-                        <option value="words" ${params.sort === 'words' ? 'selected' : ''}>Words</option>
-                    </select>
-                </div>
-                <button class="btn" type="button" id="bff-search-button">Search</button>
-                <button class="btn" id="bff-search-button-hidden">Search</button>
-            </div>
-            <input type="hidden" id="bff-limit" name="limit" value="${params.limit}"></input>
-            <input type="hidden" id="bff-page" name="page" value="${params.page}"></input>
-        </form>
 
-        <div>
-            <center id="bff-pagination-top" class="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;"></center>
-            <div id="bff-search-result"></div>
-            <center id="bff-pagination-bottom" class="bff-search-pagination" style="margin-top:5px;margin-bottom:5px;">
-        </div>
-        `;
+    let searchOptions = [
+        { value: 'relevance', name: 'Relevance', selected: false },
+        { value: 'update', name: 'Update Date', selected: false },
+        { value: 'publish', name: 'Publish Date', selected: false },
+        { value: 'reviews', name: 'Reviews', selected: false },
+        { value: 'favorites', name: 'Favorites', selected: false },
+        { value: 'follows', name: 'Follows', selected: false },
+        { value: 'words', name: 'Words', selected: false },
+    ];
 
-    document.getElementById('bff-search-button').onmousedown = (event) => {
-        event.preventDefault();
-        document.getElementById('bff-page').value = 1;
-        searchStories(paramMap);
+    (searchOptions.find(el => el.value === params.sort) ?? searchOptions[0]).selected = true;
+
+    let searchForm = createSearchForm(params, fandomList, searchOptions);
+
+    let paginationWrapper = createElement('div', null, 
+        wrapper => wrapper.append(
+            createElement('center', 'bff-search-pagination', 
+                pag => pag.style = 'margin-top:5px;margin-bottom:5px;'
+            ),
+            createElement('div', null, 
+                results => results.id = 'bff-search-result'
+            ),
+            createElement('center', 'bff-search-pagination', 
+                pag => pag.style = 'margin-top:5px;margin-bottom:5px;'
+            )
+        )
+    );
+
+    document.getElementById('content_wrapper_inner').textContent = '';
+    document.getElementById('content_wrapper_inner').append(
+        searchForm,
+        paginationWrapper
+    );
+
+    document.getElementById('bff-fandom-input').oninput = event => {        
+        if (event.target.value == '' || fandomList.find(el => el.name == event.target.value)) {
+            event.target.setCustomValidity('');
+        } else {
+            event.target.setCustomValidity('Fandom name has to match existing fandom');
+        }
     };
 
-    document.getElementById('bff-search-button-hidden').onclick = (event) => {
+    let searchPageOne = (event) => {
         event.preventDefault();
-        searchStories(paramMap);
+        document.getElementById('bff-page').value = 1;
+        searchStories(params);
+    };
+    searchForm.onsubmit = searchPageOne;
+    document.getElementById('bff-search-button').onmousedown = searchPageOne;
+
+    document.getElementById('bff-search-button-hidden').onclick = event => {
+        event.preventDefault();
+        searchStories(params);
     };
 
     if (sendRightAway) {
-        searchStories(paramMap);
+        searchStories(params);
     }
 }
 
-function searchStories(paramMap) {
+function searchStories(params) {
     let formData = new FormData(document.getElementById('bff-search-form'));
     let searchString = '';
 
     let postObject = {};
-    paramMap.forEach(key => {
+    Object.keys(params).forEach(key => {
         let value = formData.get(key);
         searchString += `${encodeURI(value)}/`;
         postObject[key] = value;
     });
 
-    content.fetch(`${settings.url}/stories`, {
+    content.fetch(`${settings.backendUrl}/stories`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(postObject),
-    }).then(async res => {
-        if (res.body) {
-            return res.json();
-        }
-        return [];
-    }).then(val => {
-        window.history.pushState(val, '', `${origin}/topic/241520/187482375/1/Search-Page/${searchString}`);
-        renderSearchResult(val);
+    }).then(res => res.json()).then(body => {
+        window.history.pushState(body, '', `${origin}/topic/241520/187482375/1/Search-Page/${searchString}`);
+        renderSearchResult(body);
     });
 }
 
@@ -362,136 +332,44 @@ window.addEventListener('popstate', (event) => {
 });
 
 function renderSearchResult(val) {
-    if (val.error) {
-        document.getElementById('bff-search-result').innerHTML = `
-            <div class="panel">
-                <span class="gui_error">
-                    ${val.error}
-                    ${JSON.stringify(val.details)}
-                </span>
-            </div>`;
+    let resultElement = document.getElementById('bff-search-result');
+    resultElement.textContent = '';
+
+    if (val.error || val.count === 0) {
+        let panel = createElement('div', 'panel', 
+            createElement('span', 'gui_error', 
+                val.error ? `${val.error} ${JSON.stringify(val.details)}` : 'No result found matching your search.'
+            )
+        );
+        resultElement.appendChild(panel);
         return;
     }
 
-    if (val.count === 0) {
-        document.getElementById('bff-search-result').innerHTML = `
-            <div class="panel">
-                <span class="gui_normal">
-                    No result found matching your search.
-                </span>
-            </div>`;
-        return;
-    }
+    resultElement.appendChild(document.createElement('hr'));
 
-    document.getElementById('bff-search-result').innerHTML =
-        `<hr size="1" noshade="">`;
+    let paginationSpan = createPagination(Number(val.total), Number(val.limit), Number(val.page));
 
-    const maxPages = Math.ceil(val.total / val.limit);
+    let paginations = document.getElementsByClassName('bff-search-pagination');
 
-    let paginationString = `${niceNumber(val.total, true)} | `;
-    if (val.page >= 2) {
-        paginationString += `<a onclick=document.getElementById('bff-page').value=${Number(val.page) - 1};document.getElementById('bff-search-button-hidden').click()>« Prev</a> `;
-    }
-    paginationString += 'Page ';
-    if (val.page >= 2) {
-        paginationString += `<a onclick=document.getElementById('bff-page').value=1;document.getElementById('bff-search-button-hidden').click()>1</a> `;
-    }
-    if (val.page >= 3) {
-        paginationString += '.. ';
-    }
-    if (val.page >= 12) {
-        paginationString += `<a onclick=document.getElementById('bff-page').value=${Number(val.page) - 10};document.getElementById('bff-search-button-hidden').click()>${Number(val.page) - 10}</a> `;
-    }
-    for (let i = val.page - 3; i <= Number(val.page) + 3; i++) {
-        if (i >= 2 && i !== val.page && i < maxPages) {
-            paginationString += `<a onclick=document.getElementById('bff-page').value=${i};document.getElementById('bff-search-button-hidden').click()>${i}</a> `;
-        }
-        if (i === val.page) {
-            paginationString += `<b>${val.page}</b> `;
-        }
+    paginations[0].textContent = '';
+    paginations[1].textContent = '';
 
-        if (i === maxPages && i - 1 === val.page) {
-            paginationString += `<a onclick=document.getElementById('bff-page').value=${i};document.getElementById('bff-search-button-hidden').click()>${i}</a> `;
-        }
-    }
-
-    if (val.page < maxPages - 10) {
-        paginationString += `<a onclick=document.getElementById('bff-page').value=${Number(val.page) + 10};document.getElementById('bff-search-button-hidden').click()>${Number(val.page) + 10}</a> `;
-    }
-    if (val.page < maxPages - 1) {
-        paginationString += `.. <a onclick=document.getElementById('bff-page').value=${maxPages};document.getElementById('bff-search-button-hidden').click()>Last</a> `;
-    }
-    if (val.page < maxPages) {
-        paginationString += `<a onclick=document.getElementById('bff-page').value=${Number(val.page) + 1};document.getElementById('bff-search-button-hidden').click()>Next »</a> `;
-    }
-
-    document.getElementsByClassName('bff-search-pagination')[0].innerHTML = paginationString;
-
-    if (val.count < 10) {
-        document.getElementById('bff-pagination-bottom').hidden = true;
-    }
-    document.getElementById('bff-pagination-bottom').innerHTML = paginationString;
+    paginations[0].appendChild(paginationSpan);
+    paginations[1].appendChild(paginationSpan.cloneNode(true));
+    paginations[1].hidden = val.count < 10;
 
     val.stories.forEach((story) => document.getElementById('bff-search-result').appendChild(createStory(story)));
 }
 
-/**
- * @param {Story} data
- * @returns {HTMLDivElement}
- */
-function createStory(data) {
-    let story = document.createElement('div');
-
-    let parts = [];
-    if (!data.xfandom) {
-        parts.push(data.fandom);
-    } else {
-        parts.push('Crossover');
-        parts.push([data.fandom, data.xfandom].join(' & '));
-    }
-    parts.push(`Rated: ${data.rating}`);
-    parts.push(data.language);
-    data.genreA && !data.genreB && parts.push(data.genreA);
-    data.genreA && data.genreB && parts.push([data.genreA, data.genreB].join('/'));
-    parts.push(`Chapters: ${niceNumber(data.chapters)}`);
-    parts.push(`Words: ${niceNumber(data.words)}`);
-    data.reviews > 0 && parts.push(`Reviews: ${niceNumber(data.reviews)}`);
-    data.favs > 0 && parts.push(`Favs: ${niceNumber(data.favs)}`);
-    data.follows > 0 && parts.push(`Follows: ${niceNumber(data.follows)}`);
-    data.updated > 0 && parts.push(`Updated: <span data-xutime="${data.updated}">${unixToReadable(data.updated)}</span>`);
-    parts.push(`Published: <span data-xutime="${data.published}">${unixToReadable(data.published)}</span>`);
-    (data.pairings.length > 0 || data.characters.length > 0) && parts.push(`${data.pairings.map(pair => `[${pair.join(', ')}]`).join(' ')} ${data.characters.join(', ')}`);
-    data.completed && parts.push(`Complete`);
-
-    story.innerHTML = `
-        <div class="z-list zhover zpointer" style="min-height:77px;border-bottom:1px #cdcdcd solid;">
-            <a class="stitle" href="/s/${data.id}">
-                <img class="lazy cimage" style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" 
-                    src="${data.image_id ? `/image/${data.image_id}/75/` : '/static/images/d_60_90.jpg'}" width="50" height="66">
-                ${data.title}
-            </a>
-            ${data.chapters > 1 ? `<a href="/s/${data.id}/${data.chapters}"><span class="icon-chevron-right xicon-section-arrow"></span></a>` : ''}
-            by <a href="/u/${data.author_id}">${data.author_name}</a>  ${data.reviews > 0 ? `<a class="reviews" href="/r/${data.id}/">reviews</a>` : ''}
-            <div class="z-indent z-padtop">${data.description}
-                <div class="z-padtop2 xgray">
-                    ${parts.join(' - ')}
-                </div>
-            </div>
-        </div>
-    `;
-
-    return story;
-}
-
 function main() {
     if (window.location.pathname.startsWith('/selectcategory.php')) {
-        return handleFandomLoader();
+        return handleFandomPage();
     }
 
     appendOverlay();
 
     if (window.location.pathname.startsWith('/topic/241520/187482375/1/Search-Page')) {
-        return loadSearchPage();
+        return handleSearchPage();
     }
 
     if (window.location.pathname.startsWith('/forums')) {
@@ -518,54 +396,49 @@ function main() {
     let spans = [];
 
     for (let storyEl of storiesEl) {
-        let elementExists = storyEl.firstChild.id.startsWith('bff-span-');
+        storyEl.classList.add('bff');
 
-        let id, spanEl;
+        if (storyEl.firstChild.id.startsWith('bff-span-')) {
+            storyIds.push(storyEl.firstChild.id);
+            spans.push(storyEl.firstChild);
+            continue;
+        }
 
-        if (elementExists) {
-            id = storyEl.firstChild.id;
-            spanEl = storyEl.firstChild;
-        } else {
-            storyEl.classList.add('bff');
-            
-            id = storyEl.firstChild.href.split('/')[4];
-            spanEl = document.createElement('span');
-            
-            spanEl.id = `bff-span-${id}`;
-            spanEl.innerText = 'loading';
-            spanEl.classList.add('bff-loading');
-            spanEl.classList.add('bff-span');
-            spanEl.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime'));
-            spanEl.onclick = event => {
+        let id = storyEl.firstChild.href.split('/')[4];
+
+        let spanEl = createElement('span', ['bff-loading', 'bff-span'],
+            el => el.id = `bff-span-${id}`,
+            el => el.setAttribute('time', storyEl.lastChild.lastChild.getElementsByTagName('span')[0].getAttribute('data-xutime')),
+            el => el.onclick = event => {
                 if (event.ctrlKey) {
                     sendStories([spanEl], communityId, true);
                 } else if (event.target.classList.contains('bff-warning') ||event.target.classList.contains('bff-error')) {
                     sendStories(spans, communityId, false);
                 }
-            };
-            storyEl.insertBefore(spanEl, storyEl.firstChild);
-        }
+            },
+            'loading'
+        );
+
+        storyEl.insertBefore(spanEl, storyEl.firstChild);
         
         storyIds.push(id);
         spans.push(spanEl);
     }
 
-    content.fetch(`${settings.url}/stories/status`, {
+    content.fetch(`${settings.backendUrl}/stories/status`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ ids: storyIds })
     }).then(async res => {
-        if (res.body) {
-            return res.json();
-        }
-        return [];
+            return res.body ? res.json() : [];
     }).then(val => {
         updateIndicators(spans, val, communityId);
+
         if (settings.autoLoad) {
             let redEl = document.getElementsByClassName('bff-error');
-            let yellowEl = document.getElementsByClassName('bff-error');
+            let yellowEl = document.getElementsByClassName('bff-warning');
             if (redEl.length > 0) {
                 redEl[0].click();
             } else if (yellowEl.length > 0) {
@@ -576,6 +449,7 @@ function main() {
 }
 
 /**
+ * Converts a number in to a short readable string (1000 => 1.0k)
  * @param {number} num
  * @return {String}
  */
@@ -595,6 +469,10 @@ function niceNumber(num, shorten) {
 }
 
 /**
+ * Converts unix Time into a nice formated string
+ * => 10min ago
+ * => 16 May
+ * => 15 March 2017
  * @param {Number} unixTime
  * @return {String}
  */

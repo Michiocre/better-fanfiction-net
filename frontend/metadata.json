@@ -1,0 +1,12 @@
+{
+  "version": { "license": "Unlicense" },
+  "categories": { "firefox": ["search-tools", "appearance"] },
+  "requires_payment": false,
+  "is_experimental": true, 
+  "homepage": {
+    "en-US": "https://github.com/Michiocre/better-fanfiction-net"
+  },
+  "support_email": {
+    "en-US": "michi2806@gmail.com"
+  }
+}

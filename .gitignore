@@ -7,3 +7,6 @@ logs
 *.db-wal
 
 helpers
+web-ext-artifacts
+.amo-upload-uuid
+.web-extension-id

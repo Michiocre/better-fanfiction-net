@@ -115,3 +115,8 @@ select.bff-input {
 .gui_success {
     color: green;
 }
+
+.bff-input:invalid {
+    border-color: #e9322d;
+    color: #b94a48;
+}
