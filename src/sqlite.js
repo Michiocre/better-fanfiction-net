@@ -350,8 +350,6 @@ function getStories(params) {
 
     const stmt = db.prepare(searchString);
 
-    console.log(searchString);
-
     let offset = (params.page - 1) * params.limit ?? 0;
 
     /**@type {Array<Story>} */

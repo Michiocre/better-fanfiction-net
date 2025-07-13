@@ -277,7 +277,7 @@ async function handleSearchPage() {
     );
 
     document.getElementById('bff-fandom-input').oninput = event => {        
-        if (event.target.value == '' || fandomList.find(el => el.name == event.target.value)) {
+        if (event.target.value === '' || fandomList.find(el => el.name === event.target.value)) {
             event.target.setCustomValidity('');
         } else {
             event.target.setCustomValidity('Fandom name has to match existing fandom');

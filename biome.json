@@ -24,6 +24,9 @@
             "correctness": {
                 "noUnusedVariables": "off",
                 "noUnusedFunctionParameters": "off"
+            },
+            "suspicious": {
+                "noAssignInExpressions": "off"
             }
         }
     },

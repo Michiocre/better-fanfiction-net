@@ -158,7 +158,7 @@ function createStory(data) {
                     img =>img.height = '66'
                 ),
                 titleLink => {
-                    let parts = data.title.split(/\<\/?b\>/);
+                    let parts = data.title.split(/<\/?b>/);
                     for (let i = 0; i < parts.length; i++) {
                         if (i % 2 === 0) {
                             titleLink.appendChild(document.createTextNode(parts[i]));
@@ -185,7 +185,7 @@ function createStory(data) {
             ),
             createElement('div', ['z-indent', 'z-padtop'], 
                 desc => {
-                    let parts = data.description.split(/\<\/?b\>/);
+                    let parts = data.description.split(/<\/?b>/);
                     for (let i = 0; i < parts.length; i++) {
                         if (i % 2 === 0) {
                             desc.appendChild(document.createTextNode(parts[i]));
@@ -213,7 +213,7 @@ function createStory(data) {
                     data.pairings.length > 0 && data.pairings.map(pair => `[${pair.join(', ')}]`).join(' '),
                     ' ',
                     data.characters.length > 0 && data.characters.join(', '),
-                    data.completed == true && ' - Complete'
+                    Boolean(data.completed) && ' - Complete'
                 )
             )
         )
