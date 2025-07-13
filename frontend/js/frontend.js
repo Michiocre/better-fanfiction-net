@@ -210,6 +210,8 @@ function appendOverlay() {
 }
 
 async function handleSearchPage() {
+    document.getElementById('content_wrapper_inner').textContent = '';
+
     let urlParts = window.location.href.split('Search-Page/');
 
     let fandomList = await (await content.fetch(`${settings.backendUrl}/fandoms`, {
@@ -225,6 +227,8 @@ async function handleSearchPage() {
         fandom: '',
         datefrom: '',
         dateuntil: '',
+        pubDateFrom: '',
+        pubDateUntil: '',
         sort: 'relevance',
         page: 1,
         limit: 100,
@@ -270,7 +274,6 @@ async function handleSearchPage() {
         )
     );
 
-    document.getElementById('content_wrapper_inner').textContent = '';
     document.getElementById('content_wrapper_inner').append(
         searchForm,
         paginationWrapper

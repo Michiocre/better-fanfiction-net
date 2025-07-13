@@ -25,6 +25,8 @@
  * @prop {string} description
  * @prop {string} datefrom
  * @prop {string} dateuntil
+ * @prop {string} pubDateFrom
+ * @prop {string} pubDateUntil
  * @prop {string} sort
  * @prop {number} limit
  * @prop {number} page

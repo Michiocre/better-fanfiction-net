@@ -338,6 +338,8 @@ function getStories(params) {
                 ${params?.fandom && params?.fandom !== '' && 'AND f.name == $fandom'}
                 ${params?.datefrom && params?.datefrom !== '' && 'AND coalesce(s.updated, s.published) >= $datefrom'}
                 ${params?.dateuntil && params?.dateuntil !== '' && 'AND coalesce(s.updated, s.published) <= $dateuntil'}
+                ${params?.pubDateFrom && params?.pubDateFrom !== '' && 'AND s.published >= $pubDateFrom'}
+                ${params?.pubDateUntil && params?.pubDateUntil !== '' && 'AND s.published <= $pubDateUntil'}
             ${sortings[params.sort] ?? sortings.relavance}
             LIMIT $limit OFFSET $offset
         ) as res
@@ -349,6 +351,8 @@ function getStories(params) {
         ;`;
 
     const stmt = db.prepare(searchString);
+
+    console.log(searchString);
 
     let offset = (params.page - 1) * params.limit ?? 0;
 
@@ -364,6 +368,8 @@ function getStories(params) {
             fandom: params.fandom,
             datefrom: utils.dateStringToUnix(params.datefrom),
             dateuntil: utils.dateStringToUnix(params.dateuntil),
+            pubDateFrom: utils.dateStringToUnix(params.pubDateFrom),
+            pubDateUntil: utils.dateStringToUnix(params.pubDateUntil)
         });
     } catch (err) {
         console.log(err);

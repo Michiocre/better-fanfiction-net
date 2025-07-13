@@ -100,6 +100,24 @@ function createSearchForm(params, fandomList, sortOptions) {
                 )
             ),
             createElement('div', 'bff-row', 
+                createElement('label', 'bff-label', 'Published after'),
+                createElement('input', 'bff-input',
+                    input => input.id = 'bff-pubDateFrom',
+                    input => input.type = 'date',
+                    input => input.name = 'pubDateFrom',
+                    input => input.value = params.pubDateFrom
+                )
+            ),
+            createElement('div', 'bff-row', 
+                createElement('label', 'bff-label', 'Published before'),
+                createElement('input', 'bff-input',
+                    input => input.id = 'bff-pubDateUntil',
+                    input => input.type = 'date',
+                    input => input.name = 'pubDateUntil',
+                    input => input.value = params.pubDateUntil
+                )
+            ),
+            createElement('div', 'bff-row', 
                 createElement('label', 'bff-label', 'Order by'),
                 createElement('select', 'bff-input',
                     input => input.type = 'dropdown',
@@ -158,6 +176,7 @@ function createStory(data) {
                     img =>img.height = '66'
                 ),
                 titleLink => {
+                    data.title = data.title.replaceAll('&amp;', '&');
                     let parts = data.title.split(/<\/?b>/);
                     for (let i = 0; i < parts.length; i++) {
                         if (i % 2 === 0) {
@@ -185,6 +204,7 @@ function createStory(data) {
             ),
             createElement('div', ['z-indent', 'z-padtop'], 
                 desc => {
+                    data.description = data.description.replaceAll('&amp;', '&');
                     let parts = data.description.split(/<\/?b>/);
                     for (let i = 0; i < parts.length; i++) {
                         if (i % 2 === 0) {
