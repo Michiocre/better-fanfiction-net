@@ -44,7 +44,7 @@ hr, .lc-left {
     border-color: #242a30 !important;
 }
 
-div > .zhover:hover, l.topnav ul li a:hover, ul.topnav ul li.active, ul.topnav ul li a:hover, ul.topnav ul li.active {
+div > .zhover:hover, li.topnav ul li a:hover, ul.topnav ul li.active, ul.topnav ul li a:hover, ul.topnav ul li.active {
     background-image: linear-gradient(to bottom,#0d1117,#010409) !important;
 }
 

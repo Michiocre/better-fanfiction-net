@@ -11,7 +11,7 @@ html {
     position: relative;
 }
 
-.bff>span {
+.bff > span {
     cursor: pointer;
     margin-right: 10px;
     content: "";
@@ -26,7 +26,7 @@ html {
     overflow: hidden;
 }
 
-.bff>span:hover {
+.bff > span:hover {
     max-width: 100px;
     color: white;
 }
@@ -94,12 +94,29 @@ select.bff-input {
     display: none;
 }
 
-.panel_normal {
+.panel {
     margin-top: 1rem;
-    background: #F6F7EE;
+    background: #f6f7ee;
     color: #000000;
     padding: 10px;
     border: 1px outset;
     margin-bottom: 5px;
     text-align: left;
+}
+
+.gui_error {
+    color: red;
+}
+
+.gui_warning {
+    color: #e56717;
+}
+
+.gui_success {
+    color: green;
+}
+
+.bff-input:invalid {
+    border-color: #e9322d;
+    color: #b94a48;
 }

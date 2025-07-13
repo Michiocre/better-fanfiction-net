@@ -1,12 +1,12 @@
-const fs = require('fs');
-const path = require("path");
+const fs = require('node:fs');
+const path = require('node:path');
 //let loggingPath = path.join('logs',new Date().toJSON().slice(0,19).replaceAll(':', '-') + '.txt');
-let loggingPath = path.join('logs','log.txt');
+const loggingPath = path.join('logs', 'log.txt');
 
-function initLogging() {    
+function initLogging() {
     if (!fs.existsSync(loggingPath)) {
-        fs.mkdirSync(path.dirname(loggingPath), {recursive: true});
-        fs.writeFileSync(loggingPath, "");
+        fs.mkdirSync(path.dirname(loggingPath), { recursive: true });
+        fs.writeFileSync(loggingPath, '');
     }
 }
 
@@ -33,7 +33,7 @@ function error(...args) {
 function write(type, ...args) {
     let message = `[${new Date().toUTCString()}] [${type}]`;
     for (let arg of args) {
-        if (arg?.toString() == '[object Object]') {
+        if (arg?.toString() === '[object Object]') {
             arg = JSON.stringify(arg);
         }
         message += ` ${arg}`;
@@ -43,12 +43,12 @@ function write(type, ...args) {
     fs.appendFileSync(loggingPath, message);
 }
 
-function utf8_to_b64( str ) {
-    return btoa(unescape(encodeURIComponent( str )));
+function utf8_to_b64(str) {
+    return btoa(unescape(encodeURIComponent(str)));
 }
 
-function b64_to_utf8( str ) {
-    return decodeURIComponent(escape(atob( str )));
+function b64_to_utf8(str) {
+    return decodeURIComponent(escape(atob(str)));
 }
 
 /**
@@ -72,7 +72,7 @@ function clamp(val, min, max) {
  * @returns {number}
  */
 function dateStringToUnix(date) {
-    return Math.floor(new Date(date).getTime() / 1000)
+    return Math.floor(new Date(date).getTime() / 1000);
 }
 
 module.exports = {
@@ -84,5 +84,5 @@ module.exports = {
     utf8_to_b64,
     b64_to_utf8,
     clamp,
-    dateStringToUnix
-}
+    dateStringToUnix,
+};

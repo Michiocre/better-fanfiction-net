@@ -1,10 +1,14 @@
 {
     "manifest_version": 2,
     "name": "Better fanfiction.net",
-    "version": "0.1",
+    "version": "0.4",
+    "author": "Michiocre",
+    "homepage_url": "https://github.com/Michiocre/better-fanfiction-net",
 
     "description": "Adds improved search function to fanfiction.net",
     "web_accessible_resources": ["css/dark.css"],
+
+    "browser_specific_settings": {"gecko": {"id": "{cba5365f-e725-4534-a414-af0100f1fef1}"}},
 
     "content_scripts": [
         {
@@ -15,7 +19,7 @@
         },
         {
             "matches": ["*://*.fanfiction.net/*"],
-            "js": ["js/frontend.js"],
+            "js": ["js/rendering.js", "js/frontend.js"],
             "run_at": "document_end"
         }
     ],

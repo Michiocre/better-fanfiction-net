@@ -14,13 +14,13 @@ describe('basic parse test', () => {
 
     it('should parseDate', () => {
         expect(parser.parseDate(0)).to.eql(new Date(0));
-        let currentUnix = new Date().getTime();
+        const currentUnix = Date.now();
         expect(parser.parseDate(currentUnix / 1000)).to.eql(new Date(currentUnix));
         expect(parser.parseDate(undefined)).to.be(undefined);
     });
 
     it('should parseChars', () => {
-        expect(parser.parseChars(``)).to.eql([[],[]]);
+        expect(parser.parseChars(``)).to.eql([[], []]);
         expect(parser.parseChars(`Hermione G.`)).to.eql([[], ['Hermione G.']]);
         expect(parser.parseChars(`Harry P., Hermione G.`)).to.eql([[], ['Harry P.', 'Hermione G.']]);
         expect(parser.parseChars(`[Harry P., Hermione G.]`)).to.eql([[['Harry P.', 'Hermione G.']], []]);
@@ -31,7 +31,7 @@ describe('basic parse test', () => {
 
     it ('should throw exception on wrong format', () => {
         expect(() => parser.parseChars(`Harry P., Hermione G. [Hermione G., Draco M.]`)).to.throwException('Can`t parse characters');
-    })
+    });
 });
 
 describe('parser parseSearchDivData', () => {
@@ -55,9 +55,9 @@ describe('parser parseSearchDivData', () => {
             characters: ['Draco M.', 'Harry P.'],
             pairings: [],
             completed: false,
-            description: "Description"
+            description: 'Description'
         });
-    
+
         expect(
             parser.parseSearchDivData(`<div class="z-indent z-padtop">Description<div class="z-padtop2 xgray">Rated: M - English - Romance/Angst - Chapters: 49 - Words: 284,050 - Reviews: 18615 - Favs: 37,499 - Follows: 19,755 - Updated: <span data-xutime="1578190357">Jan 5, 2020</span> - Published: <span data-xutime="1283431425">Sep 2, 2010</span> - Hermione G., Draco M. - Complete</div></div>`)
         ).to.eql({
@@ -77,9 +77,9 @@ describe('parser parseSearchDivData', () => {
             characters: ['Hermione G.', 'Draco M.'],
             pairings: [],
             completed: true,
-            description: "Description"
+            description: 'Description'
         });
-    
+
         expect(
             parser.parseSearchDivData(`<div class="z-indent z-padtop">Description<div class="z-padtop2 xgray">Rated: M - Spanish - Hurt/Comfort/Romance - Chapters: 1 - Words: 2,918 - Published: <span data-xutime="1678461818">1h ago</span> - [Harry P., OC] Voldemort</div></div>`)
         ).to.eql({
@@ -99,11 +99,11 @@ describe('parser parseSearchDivData', () => {
             characters: ['Voldemort'],
             pairings: [['Harry P.', 'OC']],
             completed: false,
-            description: "Description"
+            description: 'Description'
         });
     });
 
-    it ('should handle crossovers', () => {
+    it('should handle crossovers', () => {
         expect(
             parser.parseSearchDivData(`<div class="z-indent z-padtop">At the end of the war, Alina travels the world.<div class="z-padtop2 xgray">Crossover - Shadow and Bone &amp; House of the Dragon - Rated: T - English - Adventure/Friendship - Chapters: 1 - Words: 1,709 - Published: <span data-xutime="1689099337">6h ago</span> - Alina S., Rhaenyra T. - Complete</div></div>`)
         ).to.eql({
@@ -123,11 +123,11 @@ describe('parser parseSearchDivData', () => {
             characters: ['Alina S.', 'Rhaenyra T.'],
             pairings: [],
             completed: true,
-            description: "At the end of the war, Alina travels the world."
+            description: 'At the end of the war, Alina travels the world.'
         });
     });
 
-    it ('should handle strange fandom names', () => {
+    it('should handle strange fandom names', () => {
         expect(
             parser.parseSearchDivData(`<div class="z-indent z-padtop">After defeating both Gabriel and Lila, the miraculous team finally recovers the butterfly miraculous and live their life in peace while still protecting the city. But when new jewls emerge from the shadows, the mischievous, the team of heroes will have to unite once again to defeat the treat. Will the world be safe from the rising menace or will it fall into the darkness ?<div class="z-padtop2 xgray">Miraculous: Tales of Ladybug &amp; Cat Noir - Rated: T - English - Chapters: 1 - Words: 1,742 - Reviews: 1 - Favs: 3 - Follows: 2 - Published: <span data-xutime="1689172472">6h ago</span> - Marinette D-C./Ladybug, Adrien A./Cat Noir, Alya C./Lady Wifi/Rena Rouge, Zoé Lee/Vesperia</div></div>`)
         ).to.eql({
@@ -147,9 +147,9 @@ describe('parser parseSearchDivData', () => {
             characters: ['Marinette D-C./Ladybug', 'Adrien A./Cat Noir', 'Alya C./Lady Wifi/Rena Rouge', 'Zoé Lee/Vesperia'],
             pairings: [],
             completed: false,
-            description: "After defeating both Gabriel and Lila, the miraculous team finally recovers the butterfly miraculous and live their life in peace while still protecting the city. But when new jewls emerge from the shadows, the mischievous, the team of heroes will have to unite once again to defeat the treat. Will the world be safe from the rising menace or will it fall into the darkness ?"
+            description: 'After defeating both Gabriel and Lila, the miraculous team finally recovers the butterfly miraculous and live their life in peace while still protecting the city. But when new jewls emerge from the shadows, the mischievous, the team of heroes will have to unite once again to defeat the treat. Will the world be safe from the rising menace or will it fall into the darkness ?'
         });
-    
+
         expect(
             parser.parseSearchDivData(`<div class="z-indent z-padtop">Rated T for swearing and perverted suggestions. Stocking ran out of sweets, and on her quest to find some, she nearly gets into a car accident thanks to a very special card. As if to guide her onto a particular path, a card shop is near where she parks, and a certain Geek Boy is running the shop...<div class="z-padtop2 xgray">Crossover - Yu-Gi-Oh &amp; Panty &amp; Stocking with Garterbelt/パンティ＆ストッキングwithガーターベルト - Rated: T - English - Friendship/Adventure - Chapters: 8 - Words: 35,599 - Reviews: 49 - Favs: 77 - Follows: 60 - Updated: <span data-xutime="1529171293">Jun 16, 2018</span> - Published: <span data-xutime="1342375764">Jul 15, 2012</span> - Duel Monster, Stocking A.</div></div>`)
         ).to.eql({
@@ -203,7 +203,7 @@ describe('parser parseSearchDivData', () => {
 });
 
 describe('parser parseCommunityDiv', () => {
-    it ('should handle the basics', () => {
+    it('should handle the basics', () => {
         expect(
             parser.parseCommunityDiv(`
                 <tbody><tr>
@@ -311,27 +311,30 @@ describe('parser parseSearchPage', () => {
             `<span class="bff-span bff-error">not registered</span><a class="stitle" href="/s/13476426/1/The-Inner-Eye"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/6038841/75/" data-original="/image/6038841/75/" width="50" height="66">The Inner Eye</a> <a href="/s/13476426/6/The-Inner-Eye"><span class="icon-chevron-right xicon-section-arrow"></span></a> by <a href="/u/12901889/Bluurr">Bluurr</a> <a class="reviews" href="/r/13476426/">reviews</a>
             <div class="z-indent z-padtop">AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry<div class="z-padtop2 xgray">Rated: T - English - Family/Adventure - Chapters: 6 - Words: 12,368 - Reviews: 23 - Favs: 110 - Follows: 167 - Updated: <span data-xutime="1712589654">16m ago</span> - Published: <span data-xutime="1578845283">Jan 12, 2020</span> - [Petunia D., OC] Harry P.</div></div>`
         ], 'Harry-Potter', '', '')).to.eql([{
-            author: {id: 12901889, name: "Bluurr"},
+            author: {
+                id: 12901889,
+                name: 'Bluurr'
+            },
             chapters: 6,
-            characters: ["Harry P."],
+            characters: ['Harry P.'],
             community: null,
             completed: false,
-            description: "AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry",
-            fandom: "Harry-Potter",
+            description: `AU. Petunia Evans didn't marry Vernon Dursley – instead she went for the seer, Daniel Pasturl. So when Harry Potter turns up on their doorstep, how will the couple handle it? Will Harry get the childhood he deserved? Dumbledore bashing. Ron bashing. Intelligent!Harry Seer!Harry`,
+            fandom: 'Harry-Potter',
             favs: 110,
             follows: 167,
-            genreA: "Family",
-            genreB: "Adventure",
+            genreA: 'Family',
+            genreB: 'Adventure',
             id: 13476426,
             image: 6038841,
-            language: "English",
-            pairings: [["Petunia D.", "OC"]],
+            language: 'English',
+            pairings: [['Petunia D.', 'OC']],
             published: 1578845283,
-            rated: "T", 
-            reviews: 23, 
-            title: "The Inner Eye", 
-            updated: 1712589654, 
-            words: 12368, 
+            rated: 'T',
+            reviews: 23,
+            title: 'The Inner Eye',
+            updated: 1712589654,
+            words: 12368,
             xfandom: null
         }]);
     });
@@ -341,28 +344,59 @@ describe('parser parseSearchPage', () => {
             `<span id="bff-span-14357894" class="bff-span bff-success" time="1716258296">up to date</span><a class="stitle" href="/s/14357894/1/Devil-of-the-Iron-Flower"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/7301701/75/" data-original="/image/7301701/75/" width="50" height="66">Devil of the Iron Flower</a> by <a href="/u/16153326/Just-a-guy-with-a-keyboard">Just a guy with a keyboard</a> <a class="reviews" href="/r/14357894/">reviews</a>
             <div class="z-indent z-padtop">this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by "Azure Dragon of the East" this will be further explained in what would be the first chapter of the story<div class="z-padtop2 xgray">Crossover - Infinite Stratos/IS&lt;インフィニット・ストラトス&gt; &amp; Mobile Suit Gundam: Iron-Blooded Orphans - Rated: T - English - Sci-Fi/Romance - Chapters: 1 - Words: 216 - Reviews: 4 - Favs: 3 - Follows: 3 - Published: <span data-xutime="1716258296">May 21</span></div></div>`
         ], '', '', '')).to.eql([{
-            author: {id: 16153326, name: "Just a guy with a keyboard"},
+            author: {
+                id: 16153326,
+                name: 'Just a guy with a keyboard'
+            },
             chapters: 1,
             characters: [],
             community: null,
             completed: false,
-            description: "this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by \"Azure Dragon of the East\" this will be further explained in what would be the first chapter of the story",
-            fandom: "Infinite Stratos/IS&lt;インフィニット・ストラトス&gt;",
+            description: `this boy ichika Orimura was believed to have died in a kidnapping incident but he didn't but in exchange for staying with the living he was subjected to the horrors of being a child solider and fighting in a war This is an alternate version of a story made by "Azure Dragon of the East" this will be further explained in what would be the first chapter of the story`,
+            fandom: 'Infinite Stratos/IS&lt;インフィニット・ストラトス&gt;',
             favs: 3,
             follows: 3,
-            genreA: "Sci-Fi",
-            genreB: "Romance",
+            genreA: 'Sci-Fi',
+            genreB: 'Romance',
             id: 14357894,
             image: 7301701,
-            language: "English",
+            language: 'English',
             pairings: [],
             published: 1716258296,
-            rated: "T", 
-            reviews: 4, 
-            title: "Devil of the Iron Flower", 
-            updated: null, 
-            words: 216, 
-            xfandom: "Mobile Suit Gundam: Iron-Blooded Orphans"
+            rated: 'T',
+            reviews: 4,
+            title: 'Devil of the Iron Flower',
+            updated: null,
+            words: 216,
+            xfandom: 'Mobile Suit Gundam: Iron-Blooded Orphans'
+        }]);
+    });
+    it ('should parse a search result with boldness', () => {
+        expect(parser.parseSearchPage('https://www.fanfiction.net/search/?keywords=harry&ready=1&type=story', [`<span id="bff-span-13174635" class="bff-span bff-loading" time="1547104922">loading</span><a class="stitle" href="/s/13174635/1/Harry"><img class="lazy cimage " style="clear: left; float: left; margin-right: 3px; padding: 2px; border: 1px solid rgb(204, 204, 204); border-radius: 2px; display: block;" src="/image/5617160/75/" data-original="/image/5617160/75/" width="50" height="66"><b>Harry</b></a>  by <a href="/u/10891425/FusionFlurry">FusionFlurry</a>  <a class="reviews" href="/r/13174635/">reviews</a>
+            <div class="z-indent z-padtop"><b>Harry</b> <b>harry</b> <b>harry</b><div class="z-padtop2 xgray">Harry Potter - Rated: K - English - Humor - Chapters: 1 - Words: 29 - Reviews: 10 - Favs: 1 - Published: <span data-xutime="1547104922">Jan 10, 2019</span></div></div>`
+        ], '', '', '')).to.eql([{
+            id: 13174635,
+            image: 5617160,
+            title: 'Harry',
+            author: { id: 10891425, name: 'FusionFlurry' },
+            description: 'Harry harry harry',
+            fandom: 'Harry Potter',
+            xfandom: null,
+            rated: 'K',
+            language: 'English',
+            genreA: 'Humor',
+            genreB: null,
+            chapters: 1,
+            words: 29,
+            reviews: 10,
+            favs: 1,
+            follows: 0,
+            updated: null,
+            published: 1547104922,
+            pairings: [],
+            characters: [],
+            completed: false,
+            community: null
         }]);
     });
 });
@@ -380,7 +414,7 @@ describe('parser parseUserPage', () => {
             fandom: 'Harry Potter',
             author: {
                 id: 5503799,
-                name: "Paersephone"
+                name: 'Paersephone'
             },
             xfandom: null,
             rated: 'T',
@@ -397,7 +431,7 @@ describe('parser parseUserPage', () => {
             characters: [],
             pairings: [],
             completed: true,
-            description: "Multiple pairings and sometimes no pairings at all. I just want to have a kind of masterfic where everything can be stored, so it doesn't get too crowded on my profile yet. All HP-related, some AU, some canon. FIRST FOR NOW : Someone Who Cares. Neville doesn't feel so well after discovering who exactly was usurpating Moody's identity."
+            description: `Multiple pairings and sometimes no pairings at all. I just want to have a kind of masterfic where everything can be stored, so it doesn't get too crowded on my profile yet. All HP-related, some AU, some canon. FIRST FOR NOW : Someone Who Cares. Neville doesn't feel so well after discovering who exactly was usurpating Moody's identity.`
         }]);
     });
 });

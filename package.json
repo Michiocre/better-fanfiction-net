@@ -1,40 +1,53 @@
 {
-  "name": "better-fanfiction-net",
-  "version": "1.0.0",
-  "description": "WIP Better search features for FanFiction.net using Tampermonkey or a browser extension.",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js",
-    "frontend": "npx web-ext run --source-dir frontend --start-url www.fanfiction.net",
-    "dev": "nodemon --ignore test/ server.js",
-    "test": "mocha && npx web-ext lint --source-dir frontend",
-    "livetest": "npx httpyac test/integration.http -a -o short",
-    "migrate": "node db/migrate.mjs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Michiocre/better-fanfiction-net.git"
-  },
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Michiocre/better-fanfiction-net/issues"
-  },
-  "homepage": "https://github.com/Michiocre/better-fanfiction-net",
-  "dependencies": {
-    "better-sqlite3": "^11.5.0",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.1"
-  },
-  "devDependencies": {
-    "@blackglory/better-sqlite3-migrations": "^0.1.19",
-    "copyfiles": "^2.4.1",
-    "expect.js": "^0.3.1",
-    "extra-promise": "^7.0.0",
-    "httpyac": "^6.16.5",
-    "migration-files": "^0.4.3",
-    "mocha": "^11.0.1",
-    "nodemon": "^3.1.7"
-  }
+    "name": "better-fanfiction-net",
+    "version": "1.0.0",
+    "description": "WIP Better search features for FanFiction.net using Tampermonkey or a browser extension.",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "frontend": "npx web-ext run --source-dir frontend --start-url www.fanfiction.net",
+        "build": "npx web-ext build --source-dir frontend",
+        "sign": "dotenv -- cross-var npx web-ext sign --source-dir=frontend --channel=listed --amo-metadata=frontend/metadata.json --api-key=%API_KEY% --api-secret=%API_SECRET%",
+        "dev": "nodemon server.js",
+        "test": "mocha && npx web-ext lint --source-dir frontend",
+        "livetest": "npx httpyac test/integration.http -a -o short",
+        "migrate": "node db/migrate.mjs",
+        "lint": "npx @biomejs/biome lint --write"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Michiocre/better-fanfiction-net.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Michiocre/better-fanfiction-net/issues"
+    },
+    "homepage": "https://github.com/Michiocre/better-fanfiction-net",
+    "nodemonConfig": {
+        "ignore": [
+            "**/test/**",
+            "**/frontend/**",
+            "**/db/**"
+        ]
+    },
+    "dependencies": {
+        "better-sqlite3": "^11.5.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.21.1"
+    },
+    "devDependencies": {
+        "cross-var": "^1.1.0",
+        "@biomejs/biome": "2.1.1",
+        "@blackglory/better-sqlite3-migrations": "^0.1.19",
+        "copyfiles": "^2.4.1",
+        "dotenv-cli": "^8.0.0",
+        "expect.js": "^0.3.1",
+        "extra-promise": "^7.0.0",
+        "httpyac": "^6.16.5",
+        "migration-files": "^0.4.3",
+        "mocha": "^11.0.1",
+        "nodemon": "^3.1.7"
+    }
 }

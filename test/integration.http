@@ -1,5 +1,6 @@
 @host=http://localhost:{{PORT}}
 ###
+
 POST /parser/fandoms
 Content-Type: application/json
 {
@@ -12,13 +13,29 @@ Content-Type: application/json
     ]
 }
 ?? status == 200
+{{
+    console.info('Request in ms: ' + response?.timings.firstByte);
+}}
+
+
 GET /fandoms
 ?? status == 200
 ?? body contains "All Categories"
 ?? body contains "Harry Potter"
+{{
+    console.info('Request in ms: ' + response?.timings.firstByte);
+}}
+
 
 POST /stories
 Content-Type: application/json
 {
+    "limit": 100,
+    "page": 1,
+    "title": "SPN*"
 }
 ?? status == 200
+?? body contains "title"
+{{
+    console.info('Request in ms: ' + response?.timings.firstByte);
+}}
